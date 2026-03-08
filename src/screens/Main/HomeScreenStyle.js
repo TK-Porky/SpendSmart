@@ -1,57 +1,58 @@
+/**
+ * Home Screen Styles
+ * Minimalist flat design with Modern Teal accent
+ * @module screens/Main/HomeScreenStyle
+ */
 import { StyleSheet } from 'react-native';
+import { Colors, Spacing, Radius, Shadows, Typography } from '../../constants';
 
 export const HomeScreenStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: Colors.background.secondary,
   },
   heroHeader: {
-    backgroundColor: '#0F0968',
-    height: '200',
-    borderBottomLeftRadius: 60,
-    borderBottomRightRadius: 60,
+    backgroundColor: Colors.background.primary,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xl,
   },
   loadingIndicator: {
-    marginTop: 50,
+    marginTop: Spacing.xl + Spacing.lg,
   },
-  
-  // Styles pour la section des transactions récentes
+
+  // Transactions section styles
   transactionsSection: {
-    marginTop: 20,
+    marginTop: Spacing.lg,
+    paddingBottom: Spacing.xl,
   },
   listHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginHorizontal: 20, // Aligner l'en-tête avec les cartes
-    marginBottom: 10,
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   listTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    ...Typography.h3,
+    color: Colors.text.primary,
   },
   viewAllButton: {
-    fontSize: 14,
-    color: '#007AFF',
+    ...Typography.caption,
     fontWeight: '600',
+    color: Colors.primary.main,
   },
   noTransactionsCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginHorizontal: 20, // Aligner avec les cartes
-    marginVertical: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-    alignItems: 'center', // Centrer le texte
+    backgroundColor: Colors.background.card,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.xs,
+    alignItems: 'center',
+    ...Shadows.sm,
   },
   noTransactionsText: {
+    ...Typography.body,
     textAlign: 'center',
-    color: '#777',
-    fontSize: 14,
+    color: Colors.text.secondary,
   },
 });

@@ -21,19 +21,19 @@ import { Colors } from '../constants';
 const TOAST_TYPES = {
   success: {
     icon: 'check-circle',
-    backgroundColor: Colors.success.main,
+    backgroundColor: Colors.success,
   },
   error: {
     icon: 'alert-circle',
-    backgroundColor: Colors.error.main,
+    backgroundColor: Colors.error,
   },
   warning: {
     icon: 'alert',
-    backgroundColor: Colors.warning.main,
+    backgroundColor: Colors.warning,
   },
   info: {
     icon: 'information',
-    backgroundColor: Colors.info.main,
+    backgroundColor: Colors.info,
   },
 };
 
@@ -176,7 +176,7 @@ export const ToastProvider = ({ children }) => {
             {
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }],
-              backgroundColor: TOAST_TYPES[toast.type]?.backgroundColor || Colors.info.main,
+              backgroundColor: TOAST_TYPES[toast.type]?.backgroundColor || Colors.info,
             },
           ]}
         >

@@ -1,7 +1,13 @@
+/**
+ * User Header Component
+ * Displays user profile info with greeting and action icons
+ * Minimalist flat design with Modern Teal accent
+ * @module components/UserHeader
+ */
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Colors } from '../constants';
+import { Colors, Spacing, Radius, Typography } from '../constants';
 
 const UserHeader = ({
   userProfile,
@@ -10,7 +16,6 @@ const UserHeader = ({
   onNotificationPress,
   onSettingsPress,
 }) => {
-  // Assurez-vous que userDisplayName n'est pas null/undefined avant d'appeler charAt
   const displayChar = userDisplayName ? userDisplayName.charAt(0).toUpperCase() : '?';
 
   return (
@@ -30,10 +35,10 @@ const UserHeader = ({
       </TouchableOpacity>
       <View style={styles.headerIcons}>
         <TouchableOpacity style={styles.iconButton} onPress={onNotificationPress}>
-          <Icon name="bell" size={24} color="#fff" />
+          <Icon name="bell-outline" size={24} color={Colors.neutral[600]} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.iconButton} onPress={onSettingsPress}>
-          <Icon name="cog" size={24} color="#fff" />
+          <Icon name="cog-outline" size={24} color={Colors.neutral[600]} />
         </TouchableOpacity>
       </View>
     </View>
@@ -42,51 +47,50 @@ const UserHeader = ({
 
 const styles = StyleSheet.create({
   headerContainer: {
-    marginTop: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
+    width: 44,
+    height: 44,
+    borderRadius: Radius.full,
+    marginRight: Spacing.sm,
   },
   avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#ADD8E6',
+    width: 44,
+    height: 44,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.primary.main,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: Spacing.sm,
   },
   avatarText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
+    ...Typography.h3,
+    color: Colors.text.inverse,
   },
   userName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.text.inverse,
+    ...Typography.bodyBold,
+    color: Colors.text.primary,
   },
   greeting: {
-    color: Colors.text.inverse,
+    ...Typography.caption,
+    color: Colors.text.secondary,
   },
   headerIcons: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   iconButton: {
-    marginLeft: 15,
-    padding: 5,
+    marginLeft: Spacing.sm,
+    padding: Spacing.xs,
   },
 });
 

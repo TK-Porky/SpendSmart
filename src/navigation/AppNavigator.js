@@ -1,25 +1,32 @@
 /* eslint-disable react/no-unstable-nested-components */
-
+/**
+ * App Navigator
+ * Main navigation configuration with bottom tabs and stack navigators
+ * @module navigation/AppNavigator
+ */
 import React from 'react';
-import { View, TouchableOpacity, Alert, StyleSheet, Text } from 'react-native';
+import { View, TouchableOpacity, Alert, StyleSheet, Text, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import LinearGradient from 'react-native-linear-gradient';
+import { Colors, Spacing, Radius, Shadows } from '../constants';
 
-// Écrans principaux
+// Main screens
 import HomeScreen from '../screens/Main/HomeScreen';
 import TransactionsScreen from '../screens/Main/TransactionsScreen';
 import BudgetsScreen from '../screens/Main/BudgetsScreen';
 import StatisticsScreen from '../screens/Main/StatisticsScreen';
 import ProfileScreen from '../screens/Main/ProfileScreen';
 
-// Écrans d'ajout
-import AddTransactionScreen from '../old/AddExpenseScreen';
+// === PLACEHOLDER SCREENS ===
+const AddTransactionScreen = () => (
+  <View style={placeholderStyles.container}>
+    <Text style={placeholderStyles.text}>Page Ajout Transaction</Text>
+  </View>
+);
 
-// === ÉCRANS PLACEHOLDER ===
 const AddBudgetScreen = () => (
   <View style={placeholderStyles.container}>
     <Text style={placeholderStyles.text}>Page Ajout Budget</Text>
@@ -32,31 +39,24 @@ const AddInsightDataScreen = () => (
   </View>
 );
 
-// === COMPOSANT BOUTON D'AJOUT INTÉGRÉ ===
-const CustomAddButton = ({ onPress, focused }) => {
+// === CUSTOM ADD BUTTON ===
+const CustomAddButton = ({ focused }) => {
   return (
     <TouchableOpacity
       style={customButtonStyles.container}
-      onPress={() => {
-        console.log('CustomAddButton pressed internally');
-        // On ne fait rien ici, on laisse les listeners gérer
-        // onPress?.();
-      }}
       activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel="Ajouter"
+      accessibilityHint="Ouvre le menu d'ajout rapide"
     >
-      <LinearGradient
-        colors={['#42A5F5', '#1976D2']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[customButtonStyles.button, focused && customButtonStyles.focusedButton]}
-      >
-        <MaterialCommunityIcons name="plus" size={24} color="#FFFFFF" />
-      </LinearGradient>
+      <View style={[customButtonStyles.button, focused && customButtonStyles.focusedButton]}>
+        <MaterialCommunityIcons name="plus" size={24} color={Colors.text.inverse} />
+      </View>
     </TouchableOpacity>
   );
 };
 
-// === CONSTANTES ===
+// === CONSTANTS ===
 const TAB_NAMES = {
   HOME: 'Accueil',
   TRANSACTIONS: 'Transactions',
@@ -66,13 +66,7 @@ const TAB_NAMES = {
   PROFILE: 'Profile'
 };
 
-const COLORS = {
-  ACTIVE_TAB: '#007AFF',
-  INACTIVE_TAB: 'gray',
-  TAB_BAR_BG: '#FFF'
-};
-
-// === CRÉATEURS DE STACK ===
+// === STACK CREATORS ===
 const HomeStack = createStackNavigator();
 const TransactionsStack = createStackNavigator();
 const BudgetsStack = createStackNavigator();
@@ -80,17 +74,37 @@ const InsightStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// === CONFIGURATIONS D'ÉCRANS ===
-const defaultStackOptions = { headerShown: false };
-const headerShownOptions = { headerShown: true };
+// === SCREEN CONFIGURATIONS ===
+const defaultStackOptions = {
+  headerShown: false,
+  cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+  gestureEnabled: true,
+  gestureDirection: 'horizontal',
+};
 
-// === COMPOSANTS DE STACK ===
+const modalStackOptions = {
+  headerShown: true,
+  cardStyleInterpolator: CardStyleInterpolators.forModalPresentationIOS,
+  gestureEnabled: true,
+  gestureDirection: 'vertical',
+  headerStyle: {
+    backgroundColor: Colors.background.primary,
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  headerTintColor: Colors.text.primary,
+  headerTitleStyle: {
+    fontWeight: '600',
+  },
+};
+
+// === STACK COMPONENTS ===
 function HomeStackScreen() {
   return (
     <HomeStack.Navigator screenOptions={defaultStackOptions}>
-      <HomeStack.Screen 
-        name="HomeDashboard" 
-        component={HomeScreen} 
+      <HomeStack.Screen
+        name="HomeDashboard"
+        component={HomeScreen}
       />
       <HomeStack.Screen
         name="Profile"
@@ -100,7 +114,7 @@ function HomeStackScreen() {
       <HomeStack.Screen
         name="AddTransaction"
         component={AddTransactionScreen}
-        options={{ ...headerShownOptions, title: 'Nouvelle Transaction' }}
+        options={{ ...modalStackOptions, title: 'Nouvelle Transaction' }}
       />
     </HomeStack.Navigator>
   );
@@ -116,7 +130,7 @@ function TransactionsStackScreen() {
       <TransactionsStack.Screen
         name="AddTransaction"
         component={AddTransactionScreen}
-        options={{ ...headerShownOptions, title: 'Nouvelle Transaction' }}
+        options={{ ...modalStackOptions, title: 'Nouvelle Transaction' }}
       />
     </TransactionsStack.Navigator>
   );
@@ -125,14 +139,14 @@ function TransactionsStackScreen() {
 function BudgetsStackScreen() {
   return (
     <BudgetsStack.Navigator screenOptions={defaultStackOptions}>
-      <BudgetsStack.Screen 
-        name="BudgetsList" 
-        component={BudgetsScreen} 
+      <BudgetsStack.Screen
+        name="BudgetsList"
+        component={BudgetsScreen}
       />
       <BudgetsStack.Screen
         name="AddBudget"
         component={AddBudgetScreen}
-        options={{ ...headerShownOptions, title: 'Nouveau Budget' }}
+        options={{ ...modalStackOptions, title: 'Nouveau Budget' }}
       />
     </BudgetsStack.Navigator>
   );
@@ -141,14 +155,14 @@ function BudgetsStackScreen() {
 function InsightStackScreen() {
   return (
     <InsightStack.Navigator screenOptions={defaultStackOptions}>
-      <InsightStack.Screen 
-        name="InsightOverview" 
-        component={StatisticsScreen} 
+      <InsightStack.Screen
+        name="InsightOverview"
+        component={StatisticsScreen}
       />
       <InsightStack.Screen
         name="AddInsightData"
         component={AddInsightDataScreen}
-        options={{ ...headerShownOptions, title: 'Ajouter Données' }}
+        options={{ ...modalStackOptions, title: 'Ajouter Données' }}
       />
     </InsightStack.Navigator>
   );
@@ -157,15 +171,15 @@ function InsightStackScreen() {
 function ProfileStackScreen() {
   return (
     <ProfileStack.Navigator screenOptions={defaultStackOptions}>
-      <ProfileStack.Screen 
-        name="ProfileDetail" 
-        component={ProfileScreen} 
+      <ProfileStack.Screen
+        name="ProfileDetail"
+        component={ProfileScreen}
       />
     </ProfileStack.Navigator>
   );
 }
 
-// === CONFIGURATION DES ICÔNES ===
+// === TAB ICONS CONFIGURATION ===
 const getTabBarIcon = (routeName, focused) => {
   const iconMap = {
     [TAB_NAMES.HOME]: focused ? 'home' : 'home-outline',
@@ -174,69 +188,48 @@ const getTabBarIcon = (routeName, focused) => {
     [TAB_NAMES.INSIGHT]: focused ? 'stats-chart' : 'stats-chart-outline',
     [TAB_NAMES.PROFILE]: focused ? 'person' : 'person-outline'
   };
-  
+
   return iconMap[routeName];
 };
 
-// === GESTIONNAIRE D'ACTIONS RAPIDES ===
+// === QUICK ADD HANDLER ===
 const useQuickAddHandler = () => {
   const navigation = useNavigation();
-  
+
   const handleQuickAdd = () => {
-    console.log('=== handleQuickAdd called ===');
-    
     const state = navigation.getState();
-    console.log('Navigation state:', state);
-    
     const route = state.routes[state.index];
-    console.log('Current route:', route);
-    console.log('Current route name:', route.name);
-    
+
     const quickAddActions = {
       [TAB_NAMES.HOME]: () => {
-        console.log('Navigating to HOME -> AddTransaction');
         navigation.navigate(TAB_NAMES.HOME, { screen: 'AddTransaction' });
       },
       [TAB_NAMES.TRANSACTIONS]: () => {
-        console.log('Navigating to TRANSACTIONS -> AddTransaction');
         navigation.navigate(TAB_NAMES.TRANSACTIONS, { screen: 'AddTransaction' });
       },
       [TAB_NAMES.BUDGETS]: () => {
-        console.log('Navigating to BUDGETS -> AddBudget');
         navigation.navigate(TAB_NAMES.BUDGETS, { screen: 'AddBudget' });
       },
       [TAB_NAMES.INSIGHT]: () => {
-        console.log('Navigating to INSIGHT -> AddInsightData');
         navigation.navigate(TAB_NAMES.INSIGHT, { screen: 'AddInsightData' });
       },
       [TAB_NAMES.PROFILE]: () => {
-        console.log('Profile tab - showing alert');
         Alert.alert("Action rapide", "Pas d'action rapide définie pour le profil.");
       }
     };
-    
-    console.log('Available actions:', Object.keys(quickAddActions));
+
     const action = quickAddActions[route.name];
-    console.log('Selected action for route:', route.name, 'exists:', !!action);
-    
     if (action) {
-      console.log('Executing action...');
-      try {
-        action();
-        console.log('Action executed successfully');
-      } catch (error) {
-        console.error('Error executing action:', error);
-      }
+      action();
     } else {
-      console.log('No action found, showing default alert');
       Alert.alert("Action rapide", "Aucune action définie pour cet écran.");
     }
   };
-  
+
   return handleQuickAdd;
 };
 
-// === COMPOSANT PRINCIPAL ===
+// === MAIN COMPONENT ===
 function AppNavigator() {
   const handleQuickAdd = useQuickAddHandler();
 
@@ -244,45 +237,45 @@ function AppNavigator() {
     headerShown: false,
     tabBarIcon: ({ focused, color, size }) => {
       if (route.name === TAB_NAMES.QUICK_ADD) {
-        // On retourne directement le bouton sans onPress
         return <CustomAddButton focused={focused} />;
       }
-      
+
       const iconName = getTabBarIcon(route.name, focused);
       return <Icon name={iconName} size={size} color={color} />;
     },
-    tabBarActiveTintColor: COLORS.ACTIVE_TAB,
-    tabBarInactiveTintColor: COLORS.INACTIVE_TAB,
+    tabBarActiveTintColor: Colors.primary.main,
+    tabBarInactiveTintColor: Colors.neutral[400],
     tabBarStyle: styles.tabBar,
     tabBarLabelStyle: styles.tabBarLabel,
+    tabBarAccessibilityLabel: route.name,
   });
 
   return (
     <Tab.Navigator screenOptions={screenOptions}>
-      <Tab.Screen 
-        name={TAB_NAMES.HOME} 
-        component={HomeStackScreen} 
-        options={{ tabBarLabel: 'Accueil' }} 
+      <Tab.Screen
+        name={TAB_NAMES.HOME}
+        component={HomeStackScreen}
+        options={{ tabBarLabel: 'Accueil' }}
       />
-      <Tab.Screen 
-        name={TAB_NAMES.TRANSACTIONS} 
-        component={TransactionsStackScreen} 
-        options={{ tabBarLabel: 'Transactions' }} 
+      <Tab.Screen
+        name={TAB_NAMES.TRANSACTIONS}
+        component={TransactionsStackScreen}
+        options={{ tabBarLabel: 'Transactions' }}
       />
-      <Tab.Screen 
-        name={TAB_NAMES.BUDGETS} 
-        component={BudgetsStackScreen} 
-        options={{ tabBarLabel: 'Budgets' }} 
+      <Tab.Screen
+        name={TAB_NAMES.BUDGETS}
+        component={BudgetsStackScreen}
+        options={{ tabBarLabel: 'Budgets' }}
       />
-      <Tab.Screen 
-        name={TAB_NAMES.INSIGHT} 
-        component={InsightStackScreen} 
-        options={{ tabBarLabel: 'Analyse' }} 
+      <Tab.Screen
+        name={TAB_NAMES.INSIGHT}
+        component={InsightStackScreen}
+        options={{ tabBarLabel: 'Analyse' }}
       />
-      <Tab.Screen 
-        name={TAB_NAMES.PROFILE} 
-        component={ProfileStackScreen} 
-        options={{ tabBarLabel: 'Profil' }} 
+      <Tab.Screen
+        name={TAB_NAMES.PROFILE}
+        component={ProfileStackScreen}
+        options={{ tabBarLabel: 'Profil' }}
       />
     </Tab.Navigator>
   );
@@ -291,14 +284,18 @@ function AppNavigator() {
 // === STYLES ===
 const styles = StyleSheet.create({
   tabBar: {
-    height: 60,
-    backgroundColor: COLORS.TAB_BAR_BG,
-    alignItems: 'center',
-    justifyContent: 'center'
+    height: Platform.OS === 'ios' ? 88 : 64,
+    backgroundColor: Colors.background.primary,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+    paddingTop: Spacing.xs,
+    paddingBottom: Platform.OS === 'ios' ? Spacing.lg : Spacing.sm,
+    ...Shadows.sm,
   },
   tabBarLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
+    marginTop: -Spacing.xs,
   }
 });
 
@@ -309,15 +306,16 @@ const customButtonStyles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    width: 55,
+    width: 52,
     height: 40,
-    borderRadius: 10,
+    borderRadius: Radius.sm,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.primary.main,
+    ...Shadows.sm,
   },
   focusedButton: {
-    borderWidth: 2,
-    borderColor: '#FFF',
+    backgroundColor: Colors.primary.dark,
   },
 });
 
@@ -326,12 +324,12 @@ const placeholderStyles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: Colors.background.secondary,
   },
   text: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#555',
+    color: Colors.text.secondary,
   },
 });
 

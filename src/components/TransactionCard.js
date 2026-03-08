@@ -1,35 +1,83 @@
-// src/components/TransactionCard.js
+/**
+ * Transaction Card Component
+ * Displays a single transaction with icon, details, and amount
+ * Minimalist flat design
+ * @module components/TransactionCard
+ */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { formatCurrency, formatDate } from '../utils';
-import { Colors } from '../constants';
+import { Colors, Spacing, Radius, Shadows, Typography } from '../constants';
 
 /**
- * Composant de carte réutilisable pour afficher une seule transaction.
- *
- * @param {object} props - Les props du composant.
- * @param {object} props.transaction - L'objet transaction à afficher.
- * Doit contenir: id, amount, type ('income'|'expense'), currency, title/categoryName, description, date.
- * @param {function} props.onPress - Fonction de rappel lorsque la carte est pressée.
+ * Transaction type icon mapping
  */
-const TransactionCard = ({ transaction, onPress }) => {
-  const amountColor = transaction.type === 'income' ? Colors.transaction.income : Colors.transaction.expense;
-  const iconName = transaction.type === 'income' ? 'credit-card-plus-outline' : 'credit-card-minus-outline'; // Exemples d'icônes
+const getTransactionIcon = (type, categoryIcon) => {
+  if (categoryIcon) return categoryIcon;
+  switch (type) {
+    case 'income':
+      return 'arrow-down-circle';
+    case 'expense':
+      return 'arrow-up-circle';
+    case 'transfer':
+      return 'swap-horizontal-circle';
+    default:
+      return 'cash';
+  }
+};
 
-  const displayAmount = transaction.type === 'income'
+const TransactionCard = ({ transaction, onPress }) => {
+  const isIncome = transaction.type === 'income';
+  const isTransfer = transaction.type === 'transfer';
+
+  const amountColor = isIncome
+    ? Colors.success
+    : isTransfer
+      ? Colors.primary.main
+      : Colors.error;
+
+  const iconBgColor = isIncome
+    ? `${Colors.success}12`
+    : isTransfer
+      ? `${Colors.primary.main}12`
+      : `${Colors.error}12`;
+
+  const iconName = getTransactionIcon(transaction.type, transaction.categoryIcon);
+
+  const displayAmount = isIncome
     ? `+${formatCurrency(transaction.amount, transaction.currency)}`
-    : `-${formatCurrency(Math.abs(transaction.amount), transaction.currency)}`;
+    : isTransfer
+      ? formatCurrency(Math.abs(transaction.amount), transaction.currency)
+      : `-${formatCurrency(Math.abs(transaction.amount), transaction.currency)}`;
+
+  const accessibilityLabel = `${transaction.title || transaction.categoryName || 'Transaction'}, ${displayAmount}, ${transaction.description || formatDate(transaction.date)}`;
 
   return (
-    <TouchableOpacity style={styles.cardContainer} onPress={() => onPress(transaction)}>
-      <View style={styles.iconContainer}>
-        <Icon name={iconName} size={24} color="#555" />
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => onPress(transaction)}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint="Appuyez pour voir les détails de la transaction"
+    >
+      {/* Icon */}
+      <View style={[styles.iconContainer, { backgroundColor: iconBgColor }]}>
+        <Icon name={iconName} size={22} color={amountColor} />
       </View>
+
+      {/* Details */}
       <View style={styles.detailsContainer}>
-        <Text style={styles.title}>{transaction.title || transaction.categoryName || 'Transaction'}</Text>
-        <Text style={styles.subtitle}>{transaction.description || formatDate(transaction.date)}</Text>
+        <Text style={styles.title} numberOfLines={1}>
+          {transaction.title || transaction.categoryName || 'Transaction'}
+        </Text>
+        <Text style={styles.subtitle} numberOfLines={1}>
+          {transaction.description || formatDate(transaction.date)}
+        </Text>
       </View>
+
+      {/* Amount */}
       <Text style={[styles.amount, { color: amountColor }]}>
         {displayAmount}
       </Text>
@@ -38,46 +86,39 @@ const TransactionCard = ({ transaction, onPress }) => {
 };
 
 const styles = StyleSheet.create({
-  cardContainer: {
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginHorizontal: 20, // Les marges horizontales pour l'alignement
-    marginVertical: 5,    // Marge pour espacer chaque carte
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3, // Pour Android
+    backgroundColor: Colors.background.card,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.xs,
+    ...Shadows.sm,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#e0e0e0', // Couleur de fond pour le cercle d'icône
+    width: 44,
+    height: 44,
+    borderRadius: Radius.md,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: Spacing.md,
   },
   detailsContainer: {
-    flex: 1, // Prend l'espace disponible
+    flex: 1,
+    marginRight: Spacing.sm,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    ...Typography.bodyBold,
+    color: Colors.text.primary,
+    marginBottom: 2,
   },
   subtitle: {
-    fontSize: 13,
-    color: '#777',
-    marginTop: 2,
+    ...Typography.caption,
+    color: Colors.text.secondary,
   },
   amount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 10,
+    ...Typography.bodyBold,
   },
 });
 

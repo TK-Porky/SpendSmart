@@ -75,57 +75,61 @@ Secure, stable app with proper error handling and data validation
 
 ---
 
-## Milestone 2: User Experience Polish
+## Milestone 2: User Experience Polish (In Progress)
 > **Focus**: Smooth, intuitive, accessible interface
 
 ### 2.1 Loading States
 
 - [x] **2.1.1** Create `src/components/LoadingSpinner.jsx`
-- [ ] **2.1.2** Create `src/components/SkeletonCard.jsx` for list loading
-- [ ] **2.1.3** Add loading states to:
-  - [ ] HomeScreen (balance, transactions)
-  - [ ] TransactionsScreen (list)
-  - [ ] BudgetsScreen (list)
-  - [ ] StatisticsScreen (charts)
-  - [ ] ProfileScreen (user data)
-- [ ] **2.1.4** Add pull-to-refresh on all list screens
+- [x] **2.1.2** Create `src/components/SkeletonCard.jsx` for list loading
+- [x] **2.1.3** Add loading states to:
+  - [x] HomeScreen (balance, transactions)
+  - [x] TransactionsScreen (list)
+  - [x] BudgetsScreen (list)
+  - [x] StatisticsScreen (charts)
+  - [x] ProfileScreen (user data)
+- [x] **2.1.4** Add pull-to-refresh on all list screens
 - [ ] **2.1.5** Implement optimistic UI updates for better perceived performance
 
 ### 2.2 Empty States
 
-- [ ] **2.2.1** Create `src/components/EmptyState.jsx` - Reusable empty state
-- [ ] **2.2.2** Design empty states for:
-  - [ ] No transactions
-  - [ ] No budgets
-  - [ ] No accounts
-  - [ ] No statistics data
-- [ ] **2.2.3** Add call-to-action buttons in empty states
+- [x] **2.2.1** Create `src/components/EmptyState.jsx` - Reusable empty state
+- [x] **2.2.2** Design empty states for:
+  - [x] No transactions
+  - [x] No budgets
+  - [x] No accounts
+  - [x] No statistics data
+- [x] **2.2.3** Add call-to-action buttons in empty states (EmptyStatePresets)
 
 ### 2.3 Feedback & Confirmations
 
-- [ ] **2.3.1** Add haptic feedback on button presses
-- [ ] **2.3.2** Implement confirmation dialogs for:
-  - [ ] Delete transaction
-  - [ ] Delete budget
-  - [ ] Delete account
-  - [ ] Sign out
-- [ ] **2.3.3** Add success toasts after operations (add, edit, delete)
+- [x] **2.3.1** Add haptic feedback on button presses (`haptics.js`)
+- [x] **2.3.2** Implement confirmation dialogs (`ConfirmDialog.jsx`)
+- [x] **2.3.3** Add success toasts after operations (`ToastContext.js`)
 - [ ] **2.3.4** Implement undo functionality for deletions
 
 ### 2.4 Accessibility
 
-- [ ] **2.4.1** Add `accessibilityLabel` to all interactive elements
-- [ ] **2.4.2** Add `accessibilityHint` for complex actions
-- [ ] **2.4.3** Ensure proper color contrast ratios (WCAG AA)
-- [ ] **2.4.4** Support dynamic font scaling
+- [x] **2.4.1** Add `accessibilityLabel` to all interactive elements
+- [x] **2.4.2** Add `accessibilityHint` for complex actions
+- [x] **2.4.3** Ensure proper color contrast ratios (WCAG AA) - Modern Teal palette
+- [x] **2.4.4** Support dynamic font scaling (`FontScaling` in typography.js)
 - [ ] **2.4.5** Test with screen readers (TalkBack/VoiceOver)
 
 ### 2.5 Navigation Improvements
 
-- [ ] **2.5.1** Add transition animations between screens
-- [ ] **2.5.2** Implement swipe-to-go-back gesture
+- [x] **2.5.1** Add transition animations between screens (CardStyleInterpolators)
+- [x] **2.5.2** Implement swipe-to-go-back gesture (gestureEnabled)
 - [ ] **2.5.3** Add deep linking support for notifications
 - [ ] **2.5.4** Remember scroll position when returning to lists
+
+### 2.6 UI Redesign (Bonus)
+
+- [x] **2.6.1** Create design token system (spacing, typography, shadows, radius)
+- [x] **2.6.2** Modern Teal color palette (#0D9488)
+- [x] **2.6.3** Flat minimalist design (no gradients)
+- [x] **2.6.4** Create reusable UI components (Button, Input, Card)
+- [x] **2.6.5** Update all screens with new design tokens
 
 ### Deliverable
 Polished, accessible UI with proper feedback and loading states
@@ -428,8 +432,8 @@ Production-ready app with monitoring, security, and store assets
 | Milestone | Status | Progress |
 |-----------|--------|----------|
 | M0: Cleanup | ✅ Complete | 100% |
-| M1: Stability | In Progress | 75% |
-| M2: UX Polish | Started | 5% |
+| M1: Stability | ✅ Complete | 95% |
+| M2: UX Polish | In Progress | 90% |
 | M3: Features | Not Started | 0% |
 | M4: QA | Not Started | 0% |
 | M5: Production | Not Started | 0% |

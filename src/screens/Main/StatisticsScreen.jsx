@@ -1,12 +1,15 @@
-// src/screens/Main/InsightScreen.js
-
+/**
+ * Statistics Screen
+ * Financial analysis with charts and category breakdown
+ * Minimalist flat design with Modern Teal accent
+ * @module screens/Main/StatisticsScreen
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   Dimensions,
   Platform,
   FlatList,
@@ -16,24 +19,15 @@ import {
 import { BarChart } from 'react-native-chart-kit';
 import DropdownPicker from 'react-native-dropdown-picker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import LinearGradient from 'react-native-linear-gradient';
 import CategoryCard from '../../components/CategoryCard';
+import { SkeletonCard, SkeletonList, EmptyState, EmptyStatePresets } from '../../components';
+import { Colors, Spacing, Radius, Shadows, Typography } from '../../constants';
+import { formatCurrency } from '../../utils';
 
-// Services
 import { analysisService } from '../../services/AnalysisService';
 import auth from '@react-native-firebase/auth';
 
-const { width } = Dimensions.get('window');
 const screenWidth = Dimensions.get('window').width;
-
-const formatCurrency = (amount, currency = 'XOF') => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
-};
 
 const periods = [
   { label: 'Cette semaine', value: 'week' },
@@ -52,39 +46,32 @@ function StatisticsScreen({ navigation }) {
   const [user, setUser] = useState(auth().currentUser);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
-  // États pour les dropdowns
+
   const [openAnalysisDropdown, setOpenAnalysisDropdown] = useState(false);
   const [openPeriodDropdown, setOpenPeriodDropdown] = useState(false);
   const [selectedAnalysisType, setSelectedAnalysisType] = useState('expense');
   const [selectedPeriod, setSelectedPeriod] = useState('month');
-  
-  // Items pour les dropdowns
+
   const [analysisDropdownItems, setAnalysisDropdownItems] = useState(analysisTypes);
   const [periodDropdownItems, setPeriodDropdownItems] = useState(periods);
 
-  // Données d'analyse
   const [analysisData, setAnalysisData] = useState({
     categorySummary: [],
     dailyGraphData: { labels: [], datasets: [{ data: [] }] },
     totalAmountForPeriod: 0,
   });
 
-  // Données pour les cartes de catégories (compatibilité avec CategoryCard)
   const [categoriesData, setCategoriesData] = useState([]);
 
-  // Fonction pour charger les données d'analyse
   const fetchAnalysisData = useCallback(async () => {
     if (!user?.uid) return;
 
     setLoading(true);
     setRefreshing(true);
     try {
-      // Charger les données via le service d'analyse
       const data = await analysisService.getAnalysisData(user.uid, selectedPeriod, selectedAnalysisType);
       setAnalysisData(data);
 
-      // Convertir les données pour CategoryCard
       const categoryCards = data.categorySummary.map(item => ({
         id: item.id || Math.random().toString(36).substr(2, 9),
         name: item.name,
@@ -97,7 +84,6 @@ function StatisticsScreen({ navigation }) {
 
     } catch (error) {
       console.error("Erreur lors du chargement des données d'analyse:", error);
-      // Données de fallback pour démonstration
       setFallbackData();
     } finally {
       setLoading(false);
@@ -105,47 +91,46 @@ function StatisticsScreen({ navigation }) {
     }
   }, [user.uid, selectedPeriod, selectedAnalysisType, setFallbackData]);
 
-  // Données de fallback pour démonstration
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const setFallbackData = () => {
     if (selectedAnalysisType === 'expense') {
       setAnalysisData({
         categorySummary: [
-          { id: 'cat1', name: 'Alimentation', total: 25000, color: '#FF6B6B', iconName: 'food' },
-          { id: 'cat2', name: 'Transport', total: 15000, color: '#4ECDC4', iconName: 'car' },
-          { id: 'cat3', name: 'Divertissement', total: 10000, color: '#45B7D1', iconName: 'movie' },
+          { id: 'cat1', name: 'Alimentation', total: 25000, color: Colors.error, iconName: 'food' },
+          { id: 'cat2', name: 'Transport', total: 15000, color: Colors.primary.main, iconName: 'car' },
+          { id: 'cat3', name: 'Divertissement', total: 10000, color: Colors.warning, iconName: 'movie' },
         ],
         dailyGraphData: {
           labels: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
-          datasets: [{ 
+          datasets: [{
             data: [2000, 4500, 2800, 8000, 9900, 4300, 6000],
-            color: (opacity = 1) => `rgba(239, 83, 80, ${opacity})`
+            color: (opacity = 1) => `rgba(239, 68, 68, ${opacity})`
           }],
         },
         totalAmountForPeriod: 50000,
       });
       setCategoriesData([
-        { id: 'cat1', name: 'Alimentation', description: 'Courses, restaurants', amount: 25000, color: '#FF6B6B' },
-        { id: 'cat2', name: 'Transport', description: 'Bus, taxi, essence', amount: 15000, color: '#4ECDC4' },
-        { id: 'cat3', name: 'Divertissement', description: 'Films, sorties', amount: 10000, color: '#45B7D1' },
+        { id: 'cat1', name: 'Alimentation', description: 'Courses, restaurants', amount: 25000, color: Colors.error },
+        { id: 'cat2', name: 'Transport', description: 'Bus, taxi, essence', amount: 15000, color: Colors.primary.main },
+        { id: 'cat3', name: 'Divertissement', description: 'Films, sorties', amount: 10000, color: Colors.warning },
       ]);
     } else if (selectedAnalysisType === 'income') {
       setAnalysisData({
         categorySummary: [
-          { id: 'cat4', name: 'Salaire', total: 100000, color: '#51CF66', iconName: 'cash' },
+          { id: 'cat4', name: 'Salaire', total: 100000, color: Colors.success, iconName: 'cash' },
           { id: 'cat5', name: 'Freelance', total: 25000, color: '#69DB7C', iconName: 'laptop' },
         ],
         dailyGraphData: {
           labels: ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin"],
-          datasets: [{ 
+          datasets: [{
             data: [10000, 20000, 15000, 30000, 25000, 40000],
-            color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`
+            color: (opacity = 1) => `rgba(34, 197, 94, ${opacity})`
           }],
         },
         totalAmountForPeriod: 125000,
       });
       setCategoriesData([
-        { id: 'cat4', name: 'Salaire', description: 'Revenu mensuel', amount: 100000, color: '#51CF66' },
+        { id: 'cat4', name: 'Salaire', description: 'Revenu mensuel', amount: 100000, color: Colors.success },
         { id: 'cat5', name: 'Freelance', description: 'Projets secondaires', amount: 25000, color: '#69DB7C' },
       ]);
     }
@@ -157,7 +142,6 @@ function StatisticsScreen({ navigation }) {
 
   const handleCategoryPress = (category) => {
     console.log("Catégorie sélectionnée:", category);
-    // Ici vous pouvez naviguer vers un écran de détail de la catégorie
   };
 
   const onRefresh = useCallback(() => {
@@ -167,18 +151,26 @@ function StatisticsScreen({ navigation }) {
   const { categorySummary, dailyGraphData, totalAmountForPeriod } = analysisData;
   const userCurrency = 'XOF';
 
-  // Configuration du graphique
+  const getAnalysisColor = () => {
+    switch (selectedAnalysisType) {
+      case 'expense': return Colors.error;
+      case 'income': return Colors.success;
+      case 'net': return Colors.primary.main;
+      default: return Colors.primary.main;
+    }
+  };
+
   const chartConfig = {
-    backgroundGradientFrom: '#ffffff',
+    backgroundGradientFrom: Colors.background.card,
     backgroundGradientFromOpacity: 1,
-    backgroundGradientTo: '#ffffff',
+    backgroundGradientTo: Colors.background.card,
     backgroundGradientToOpacity: 1,
     color: (opacity = 1) => {
-      if (selectedAnalysisType === 'expense') return `rgba(239, 83, 80, ${opacity})`;
-      if (selectedAnalysisType === 'income') return `rgba(76, 175, 80, ${opacity})`;
-      return `rgba(0, 123, 255, ${opacity})`;
+      if (selectedAnalysisType === 'expense') return `rgba(239, 68, 68, ${opacity})`;
+      if (selectedAnalysisType === 'income') return `rgba(34, 197, 94, ${opacity})`;
+      return `rgba(13, 148, 136, ${opacity})`;
     },
-    labelColor: (opacity = 1) => `rgba(100, 100, 100, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(107, 114, 128, ${opacity})`,
     strokeWidth: 2,
     barPercentage: 0.6,
     useShadowColorFromDataset: false,
@@ -189,13 +181,12 @@ function StatisticsScreen({ navigation }) {
     },
     propsForBackgroundLines: {
       strokeDasharray: '',
-      stroke: '#e0e0e0',
+      stroke: Colors.border.light,
     },
   };
 
-  // Titre dynamique basé sur le type d'analyse
   const getHeaderTitle = () => {
-    switch(selectedAnalysisType) {
+    switch (selectedAnalysisType) {
       case 'expense': return 'Analyse des Dépenses';
       case 'income': return 'Analyse des Revenus';
       case 'net': return 'Analyse Nette';
@@ -203,44 +194,53 @@ function StatisticsScreen({ navigation }) {
     }
   };
 
-  // Couleur du header basée sur le type d'analyse
-  const getHeaderColors = () => {
-    switch(selectedAnalysisType) {
-      case 'expense': return ['#EF5350', '#C62828'];
-      case 'income': return ['#66BB6A', '#388E3C'];
-      case 'net': return ['#42A5F5', '#1976D2'];
-      default: return ['#ffa726', '#996417'];
-    }
-  };
-
   if (loading && !refreshing) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6A1B9A" />
-        <Text style={styles.loadingText}>Chargement des analyses...</Text>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.pageTitle}>{getHeaderTitle()}</Text>
+          <View style={[styles.typeBadge, { backgroundColor: `${getAnalysisColor()}20` }]}>
+            <Text style={[styles.typeBadgeText, { color: getAnalysisColor() }]}>
+              {selectedAnalysisType === 'expense' ? 'Dépenses' : selectedAnalysisType === 'income' ? 'Revenus' : 'Net'}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.contentWrapper}>
+          <View style={{ marginTop: Spacing.lg }}>
+            <SkeletonCard variant="balance" style={{ marginHorizontal: 0, marginBottom: Spacing.lg }} />
+            <SkeletonList count={4} variant="transaction" />
+          </View>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <ScrollView 
-        style={styles.scrollViewContent} 
+      <ScrollView
+        style={styles.scrollViewContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary.main]}
+            tintColor={Colors.primary.main}
+          />
+        }
       >
-        {/* Header avec gradient dynamique */}
-        <LinearGradient
-          colors={getHeaderColors()}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.headerBackground}
-        >
+        {/* Header */}
+        <View style={styles.header}>
           <Text style={styles.pageTitle}>{getHeaderTitle()}</Text>
-        </LinearGradient>
+          <View style={[styles.typeBadge, { backgroundColor: `${getAnalysisColor()}20` }]}>
+            <Text style={[styles.typeBadgeText, { color: getAnalysisColor() }]}>
+              {selectedAnalysisType === 'expense' ? 'Dépenses' : selectedAnalysisType === 'income' ? 'Revenus' : 'Net'}
+            </Text>
+          </View>
+        </View>
 
         <View style={styles.contentWrapper}>
-          {/* Dropdowns pour les filtres */}
+          {/* Filters */}
           <View style={styles.filtersContainer}>
             <View style={styles.dropdownWrapper}>
               <Text style={styles.dropdownLabel}>Type d'analyse</Text>
@@ -257,10 +257,10 @@ function StatisticsScreen({ navigation }) {
                 textStyle={styles.pickerTextStyle}
                 dropDownContainerStyle={styles.dropdownListContainer}
                 ArrowDownIconComponent={({ size, color }) => (
-                  <Icon name="chevron-down" size={size || 20} color={color || '#777'} />
+                  <Icon name="chevron-down" size={size || 20} color={Colors.text.secondary} />
                 )}
                 ArrowUpIconComponent={({ size, color }) => (
-                  <Icon name="chevron-up" size={size || 20} color={color || '#777'} />
+                  <Icon name="chevron-up" size={size || 20} color={Colors.text.secondary} />
                 )}
                 zIndex={3000}
                 zIndexInverse={1000}
@@ -282,10 +282,10 @@ function StatisticsScreen({ navigation }) {
                 textStyle={styles.pickerTextStyle}
                 dropDownContainerStyle={styles.dropdownListContainer}
                 ArrowDownIconComponent={({ size, color }) => (
-                  <Icon name="chevron-down" size={size || 20} color={color || '#777'} />
+                  <Icon name="chevron-down" size={size || 20} color={Colors.text.secondary} />
                 )}
                 ArrowUpIconComponent={({ size, color }) => (
-                  <Icon name="chevron-up" size={size || 20} color={color || '#777'} />
+                  <Icon name="chevron-up" size={size || 20} color={Colors.text.secondary} />
                 )}
                 zIndex={2000}
                 zIndexInverse={2000}
@@ -293,7 +293,7 @@ function StatisticsScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Section Graphique */}
+          {/* Chart Section */}
           <View style={styles.chartCard}>
             <Text style={styles.chartTitle}>
               Tendances {selectedAnalysisType === 'expense' ? 'de Dépenses' : selectedAnalysisType === 'income' ? 'de Revenus' : 'Nettes'}
@@ -317,30 +317,26 @@ function StatisticsScreen({ navigation }) {
               </ScrollView>
             ) : (
               <View style={styles.noDataContainer}>
-                <Icon name="chart-bar" size={48} color="#ccc" />
+                <Icon name="chart-bar" size={48} color={Colors.neutral[300]} />
                 <Text style={styles.noDataText}>Pas de données pour le graphique sur cette période.</Text>
               </View>
             )}
             <View style={styles.totalAmountContainer}>
               <Text style={styles.totalAmountLabel}>Total pour la période:</Text>
-              <Text style={[styles.totalAmountValue, { color: getHeaderColors()[0] }]}>
+              <Text style={[styles.totalAmountValue, { color: getAnalysisColor() }]}>
                 {formatCurrency(totalAmountForPeriod, userCurrency)}
               </Text>
             </View>
           </View>
 
-          {/* Section des catégories */}
+          {/* Categories Section */}
           <View style={styles.categoriesSection}>
             <Text style={styles.sectionHeader}>Répartition par Catégorie</Text>
-            
+
             {loading ? (
-              <View style={styles.categoriesLoadingContainer}>
-                <ActivityIndicator size="large" color="#6A1B9A" />
-                <Text style={styles.loadingText}>Chargement des catégories...</Text>
-              </View>
+              <SkeletonList count={4} variant="transaction" />
             ) : categoriesData.length > 0 ? (
               <>
-                {/* Affichage détaillé avec barres de progression */}
                 <View style={styles.detailedCategoriesContainer}>
                   {categorySummary.map((item, index) => {
                     const percentage = totalAmountForPeriod !== 0 ? ((Math.abs(item.total) / Math.abs(totalAmountForPeriod)) * 100) : 0;
@@ -349,13 +345,13 @@ function StatisticsScreen({ navigation }) {
 
                     return (
                       <TouchableOpacity key={index} style={styles.categoryItem} onPress={() => handleCategoryPress(item)}>
-                        <View style={[styles.categoryIconContainer, { backgroundColor: item.color || '#ccc' }]}>
-                          <Icon name={item.iconName || 'help-circle'} size={24} color="#fff" />
+                        <View style={[styles.categoryIconContainer, { backgroundColor: item.color || Colors.primary.main }]}>
+                          <Icon name={item.iconName || 'help-circle'} size={24} color={Colors.text.inverse} />
                         </View>
                         <View style={styles.categoryDetails}>
                           <Text style={styles.categoryName}>{item.name}</Text>
                           <View style={styles.categoryProgressBarContainer}>
-                            <View style={[styles.categoryProgressBar, { width: `${percentage}%`, backgroundColor: item.color || '#007bff' }]} />
+                            <View style={[styles.categoryProgressBar, { width: `${percentage}%`, backgroundColor: item.color || Colors.primary.main }]} />
                           </View>
                         </View>
                         <View style={styles.categoryAmountContainer}>
@@ -367,7 +363,6 @@ function StatisticsScreen({ navigation }) {
                   })}
                 </View>
 
-                {/* Cartes de catégories */}
                 <Text style={styles.cardsSubHeader}>Détail des catégories</Text>
                 <FlatList
                   data={categoriesData}
@@ -383,11 +378,10 @@ function StatisticsScreen({ navigation }) {
                 />
               </>
             ) : (
-              <View style={styles.noDataCard}>
-                <Icon name="folder-open-outline" size={48} color="#ccc" />
-                <Text style={styles.noDataText}>Aucune donnée pour la période et le type d'analyse sélectionnés.</Text>
-                <Text style={styles.noDataSubText}>Essayez de changer la période ou le type d'analyse.</Text>
-              </View>
+              <EmptyState
+                {...EmptyStatePresets.statistics}
+                style={{ paddingVertical: 40 }}
+              />
             )}
           </View>
         </View>
@@ -400,231 +394,182 @@ function StatisticsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: Colors.background.secondary,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  header: {
+    backgroundColor: Colors.background.primary,
+    paddingTop: Spacing.xl + Spacing.lg,
+    paddingBottom: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#6A1B9A',
-  },
-  headerBackground: {
-    paddingTop: 50,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    marginBottom: 12,
-    overflow: 'hidden',
   },
   pageTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFF',
+    ...Typography.h2,
+    color: Colors.text.primary,
+    flex: 1,
+  },
+  typeBadge: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.full,
+  },
+  typeBadgeText: {
+    ...Typography.caption,
+    fontWeight: '600',
   },
   scrollViewContent: {
     flex: 1,
   },
   contentWrapper: {
     flex: 1,
-    paddingHorizontal: 20,
-    marginTop: -20,
-    paddingTop: 30,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
   },
   filtersContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
-    gap: 15,
+    marginBottom: Spacing.lg,
+    gap: Spacing.md,
   },
   dropdownWrapper: {
     flex: 1,
   },
   dropdownLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    ...Typography.bodyBold,
+    color: Colors.text.primary,
+    marginBottom: Spacing.sm,
   },
   pickerContainer: {
     height: 50,
   },
   pickerStyle: {
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: Colors.background.card,
+    borderColor: Colors.border.light,
+    borderRadius: Radius.sm,
+    paddingHorizontal: Spacing.md,
+    ...Shadows.sm,
   },
   pickerTextStyle: {
-    fontSize: 16,
-    color: '#333',
+    ...Typography.body,
+    color: Colors.text.primary,
   },
   dropdownListContainer: {
-    borderColor: '#ddd',
-    borderRadius: 10,
-    marginTop: 5,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    borderColor: Colors.border.light,
+    borderRadius: Radius.sm,
+    marginTop: Spacing.xs,
+    backgroundColor: Colors.background.card,
+    ...Shadows.sm,
   },
   pickerItemSeparator: {
     height: 1,
-    backgroundColor: '#eee',
+    backgroundColor: Colors.border.light,
   },
   chartCard: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
+    backgroundColor: Colors.background.card,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    ...Shadows.sm,
   },
   chartTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
+    ...Typography.h3,
+    marginBottom: Spacing.md,
     textAlign: 'center',
-    color: '#333',
+    color: Colors.text.primary,
   },
   chartStyle: {
-    borderRadius: 16,
+    borderRadius: Radius.lg,
   },
   noDataContainer: {
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingVertical: Spacing.xl + Spacing.lg,
   },
   totalAmountContainer: {
-    marginTop: 15,
-    padding: 15,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 10,
+    marginTop: Spacing.md,
+    padding: Spacing.md,
+    backgroundColor: Colors.background.secondary,
+    borderRadius: Radius.sm,
     alignItems: 'center',
   },
   totalAmountLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
+    ...Typography.caption,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.xs,
   },
   totalAmountValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    ...Typography.h2,
   },
   categoriesSection: {
-    marginBottom: 20,
+    marginBottom: Spacing.lg,
   },
   sectionHeader: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
+    ...Typography.h3,
+    marginBottom: Spacing.md,
+    color: Colors.text.primary,
   },
   cardsSubHeader: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 20,
-    marginBottom: 10,
-    color: '#555',
-  },
-  categoriesLoadingContainer: {
-    alignItems: 'center',
-    paddingVertical: 30,
+    ...Typography.bodyBold,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
+    color: Colors.text.secondary,
   },
   detailedCategoriesContainer: {
-    marginBottom: 10,
+    marginBottom: Spacing.sm,
   },
   categoryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    backgroundColor: Colors.background.card,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    marginBottom: Spacing.sm,
+    ...Shadows.sm,
   },
   categoryIconContainer: {
-    width: 45,
-    height: 45,
-    borderRadius: 22,
+    width: 44,
+    height: 44,
+    borderRadius: Radius.full,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: Spacing.md,
   },
   categoryDetails: {
     flex: 1,
   },
   categoryName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    ...Typography.bodyBold,
+    color: Colors.text.primary,
+    marginBottom: Spacing.sm,
   },
   categoryProgressBarContainer: {
     height: 6,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 3,
+    backgroundColor: Colors.neutral[200],
+    borderRadius: Radius.xs,
     overflow: 'hidden',
   },
   categoryProgressBar: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: Radius.xs,
   },
   categoryAmountContainer: {
     alignItems: 'flex-end',
   },
   categoryAmount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    ...Typography.bodyBold,
+    color: Colors.text.primary,
     marginBottom: 2,
   },
   categoryPercentage: {
-    fontSize: 12,
-    color: '#777',
-  },
-  noDataCard: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 30,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    ...Typography.small,
+    color: Colors.text.secondary,
   },
   noDataText: {
+    ...Typography.body,
     textAlign: 'center',
-    marginTop: 15,
-    fontSize: 16,
-    color: '#777',
-    marginBottom: 5,
-  },
-  noDataSubText: {
-    textAlign: 'center',
-    fontSize: 14,
-    color: '#999',
+    marginTop: Spacing.md,
+    color: Colors.text.secondary,
   },
 });
 

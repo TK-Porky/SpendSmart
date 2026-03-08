@@ -1,12 +1,12 @@
 // src/screens/Main/TransactionsScreen.js
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  ActivityIndicator, 
-  RefreshControl, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  RefreshControl,
   FlatList,
   TextInput,
   TouchableOpacity,
@@ -19,8 +19,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import TransactionHeader from '../../components/TransactionHeader';
 import TabSelector from '../../components/TabSelector';
 import TransactionCard from '../../components/TransactionCard';
+import { SkeletonList, EmptyState, EmptyStatePresets, LoadingSpinner } from '../../components';
 import auth from '@react-native-firebase/auth';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Colors, Spacing, Radius, Shadows, Typography } from '../../constants';
 
 import { transactionService } from '../../services/TransactionService';
 import { balanceService } from '../../services/BalanceService';
@@ -271,10 +273,7 @@ function TransactionsScreen({ navigation }) {
   const renderTransactionForm = () => {
     if (formLoading) {
       return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Chargement des données...</Text>
-        </View>
+        <LoadingSpinner message="Chargement des données..." />
       );
     }
 
@@ -389,7 +388,7 @@ function TransactionsScreen({ navigation }) {
           <Text style={styles.inputLabel}>Date</Text>
           <TouchableOpacity onPress={showDatepicker} style={styles.datePickerButton}>
             <Text style={styles.dateText}>{formData.date.toLocaleDateString()}</Text>
-            <Icon name="calendar" size={20} color="#666" />
+            <Icon name="calendar" size={20} color={Colors.text.secondary} />
           </TouchableOpacity>
           {showDatePicker && (
             <DateTimePicker
@@ -450,7 +449,7 @@ function TransactionsScreen({ navigation }) {
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Historique des transactions</Text>
             {loading ? (
-              <ActivityIndicator size="large" color="#0000ff" style={styles.loadingIndicator} />
+              <SkeletonList count={6} variant="transaction" />
             ) : transactions.length > 0 ? (
               <FlatList
                 data={transactions}
@@ -464,9 +463,11 @@ function TransactionsScreen({ navigation }) {
                 scrollEnabled={false}
               />
             ) : (
-              <View style={styles.noDataCard}>
-                <Text style={styles.noDataText}>Aucune transaction à afficher.</Text>
-              </View>
+              <EmptyState
+                {...EmptyStatePresets.transactions}
+                onAction={() => setActiveTab('transaction')}
+                style={{ paddingVertical: 40 }}
+              />
             )}
           </View>
         )}
@@ -480,139 +481,132 @@ function TransactionsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: Colors.background.secondary,
   },
   scrollViewContent: {
     flex: 1,
-    marginTop: 20,
+    marginTop: Spacing.lg,
   },
   sectionContainer: {
-    paddingBottom: 20,
+    paddingBottom: Spacing.lg,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginHorizontal: 20,
-    marginBottom: 10,
+    ...Typography.h3,
+    color: Colors.text.primary,
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   loadingIndicator: {
-    marginTop: 50,
+    marginTop: Spacing.xl + Spacing.lg,
   },
   noDataCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginHorizontal: 20,
-    marginVertical: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: Colors.background.card,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.xs,
     alignItems: 'center',
+    ...Shadows.sm,
   },
   noDataText: {
+    ...Typography.body,
     textAlign: 'center',
-    color: '#777',
-    fontSize: 14,
+    color: Colors.text.secondary,
   },
-  
-  // Styles pour le formulaire
+
+  // Form styles
   formContainer: {
-    marginHorizontal: 20,
-    marginBottom: 20,
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   formTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
+    ...Typography.h2,
+    color: Colors.text.primary,
+    marginBottom: Spacing.lg,
     textAlign: 'center',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 50,
+    paddingVertical: Spacing.xl + Spacing.lg,
   },
   loadingText: {
-    marginTop: 10,
-    color: '#666',
-    fontSize: 16,
+    ...Typography.body,
+    marginTop: Spacing.sm,
+    color: Colors.text.secondary,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: Spacing.md,
   },
   inputLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#555',
-    marginBottom: 6,
+    ...Typography.bodyBold,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.xs,
   },
   textInput: {
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    fontSize: 16,
+    backgroundColor: Colors.background.card,
+    borderRadius: Radius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    ...Typography.body,
+    color: Colors.text.primary,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: Colors.border.light,
   },
   pickerContainer: {
-    backgroundColor: '#FFF',
-    borderRadius: 8,
+    backgroundColor: Colors.background.card,
+    borderRadius: Radius.sm,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: Colors.border.light,
     overflow: 'hidden',
   },
   picker: {
-    backgroundColor: '#FFF',
+    backgroundColor: Colors.background.card,
     height: 50,
+    color: Colors.text.primary,
   },
   datePickerButton: {
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    backgroundColor: Colors.background.card,
+    borderRadius: Radius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: Colors.border.light,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     height: 50,
   },
   dateText: {
-    fontSize: 16,
-    color: '#333',
+    ...Typography.body,
+    color: Colors.text.primary,
   },
   buttonContainer: {
-    marginTop: 20,
-    gap: 10,
+    marginTop: Spacing.lg,
+    gap: Spacing.sm,
   },
   submitButton: {
-    borderRadius: 8,
-    paddingVertical: 14,
+    borderRadius: Radius.sm,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   primaryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: Colors.primary.main,
   },
   secondaryButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#FF3B30',
+    borderColor: Colors.error,
   },
   submitButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.button,
+    color: Colors.text.inverse,
   },
   secondaryButtonText: {
-    color: '#FF3B30',
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.button,
+    color: Colors.error,
   },
 });
 

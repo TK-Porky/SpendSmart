@@ -1,12 +1,11 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
   FlatList
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
@@ -15,6 +14,8 @@ import { HomeScreenStyles } from './HomeScreenStyle';
 import UserHeader from '../../components/UserHeader';
 import BalanceCard from '../../components/BalanceCard';
 import TransactionCard from '../../components/TransactionCard';
+import { SkeletonCard, SkeletonList, EmptyState, EmptyStatePresets } from '../../components';
+import { Colors } from '../../constants';
 
 import { balanceService } from '../../services/BalanceService';
 import { transactionService } from '../../services/TransactionService';
@@ -29,6 +30,7 @@ function HomeScreen({ navigation }) {
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [balanceData, setBalanceData] = useState({
     balance: 0,
     income: 0,
@@ -87,12 +89,33 @@ function HomeScreen({ navigation }) {
     });
   };
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setLoadingTransactions(true);
+    // The listeners will handle the data refresh
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
+
+  const handleAddTransaction = () => {
+    navigation.navigate('Transactions', {
+      screen: 'TransactionForm',
+    });
+  };
+
   const userCurrency = balanceSummary ? balanceSummary.currency || 'XOF' : 'XOF';
 
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
       style={HomeScreenStyles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[Colors.primary.main]}
+          tintColor={Colors.primary.main}
+        />
+      }
     >
       <View style={HomeScreenStyles.heroHeader}>
         <UserHeader
@@ -103,14 +126,18 @@ function HomeScreen({ navigation }) {
           onSettingsPress={handleSettingsPress}
         />
 
-        <BalanceCard
-          balance={balanceSummary.currentBalance}
-          income={balanceSummary.totalIncome}
-          expenses={balanceSummary.totalExpenses}
-          currency={userCurrency}
-        />
+        {loading ? (
+          <SkeletonCard variant="balance" style={{ marginHorizontal: 0 }} />
+        ) : (
+          <BalanceCard
+            balance={balanceSummary.currentBalance}
+            income={balanceSummary.totalIncome}
+            expenses={balanceSummary.totalExpenses}
+            currency={userCurrency}
+          />
+        )}
 
-        {/* Section des transactions récentes (intégrée directement ici) */}
+        {/* Section des transactions récentes */}
         <View style={HomeScreenStyles.transactionsSection}>
           <View style={HomeScreenStyles.listHeader}>
             <Text style={HomeScreenStyles.listTitle}>Transactions Récentes</Text>
@@ -120,7 +147,7 @@ function HomeScreen({ navigation }) {
           </View>
 
           {loadingTransactions ? (
-            <ActivityIndicator size="large" color="#0000ff" style={HomeScreenStyles.loadingIndicator} />
+            <SkeletonList count={5} variant="transaction" />
           ) : recentTransactions.length > 0 ? (
             <FlatList
               data={recentTransactions}
@@ -134,9 +161,11 @@ function HomeScreen({ navigation }) {
               scrollEnabled={false}
             />
           ) : (
-            <View style={HomeScreenStyles.noTransactionsCard}>
-              <Text style={HomeScreenStyles.noTransactionsText}>Aucune transaction récente à afficher.</Text>
-            </View>
+            <EmptyState
+              {...EmptyStatePresets.transactions}
+              onAction={handleAddTransaction}
+              style={{ paddingVertical: 40 }}
+            />
           )}
         </View>
 

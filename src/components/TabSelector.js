@@ -1,102 +1,86 @@
-// src/components/TabSelector.js
+/**
+ * Tab Selector Component
+ * Reusable tab switcher for navigating between views
+ * Minimalist flat design with Modern Teal accent
+ * @module components/TabSelector
+ */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient'; // Pour le dégradé du bouton actif
+import { Colors, Spacing, Radius, Shadows, Typography } from '../constants';
 
 /**
- * Composant de sélection d'onglet réutilisable (ex: Transactions / Budget).
+ * TabSelector - A clean, flat tab navigation component
  *
- * @param {object} props - Les props du composant.
- * @param {string} props.activeTab - L'onglet actuellement actif ('transactions' ou 'budget').
- * @param {function} props.onSelectTab - Fonction de rappel lorsque l'utilisateur sélectionne un onglet.
+ * @param {object} props - Component props
+ * @param {string} props.activeTab - Currently active tab identifier
+ * @param {function} props.onSelectTab - Callback when a tab is selected
+ * @param {Array} props.tabs - Array of tab objects { key, label }
  */
-const TabSelector = ({ activeTab, onSelectTab }) => {
-  const activeGradientColors = ['#FF4081', '#E00040']; // Couleurs du dégradé pour l'onglet actif
-  const inactiveColor = '#6A1B9A'; // Couleur de fond pour les onglets inactifs
-
+const TabSelector = ({
+  activeTab,
+  onSelectTab,
+  tabs = [
+    { key: 'historiques', label: 'Historiques' },
+    { key: 'transaction', label: 'Transaction' },
+  ]
+}) => {
   return (
-    <View style={styles.selectorContainer}>
-      <TouchableOpacity
-        style={styles.tabButton}
-        onPress={() => onSelectTab('historiques')}
-      >
-        {activeTab === 'historiques' ? (
-          <LinearGradient
-            colors={activeGradientColors}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.activeTabBackground}
+    <View style={styles.container}>
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.key;
+        return (
+          <TouchableOpacity
+            key={tab.key}
+            style={[
+              styles.tab,
+              isActive && styles.activeTab,
+            ]}
+            onPress={() => onSelectTab(tab.key)}
+            activeOpacity={0.7}
           >
-            <Text style={styles.activeTabText}>Historiques</Text>
-          </LinearGradient>
-        ) : (
-          <View style={[styles.inactiveTabBackground, { backgroundColor: inactiveColor }]}>
-            <Text style={styles.inactiveTabText}>Historiques</Text>
-          </View>
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.tabButton}
-        onPress={() => onSelectTab('transaction')}
-      >
-        {activeTab === 'transaction' ? (
-          <LinearGradient
-            colors={activeGradientColors}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.activeTabBackground}
-          >
-            <Text style={styles.activeTabText}>Transaction</Text>
-          </LinearGradient>
-        ) : (
-          <View style={[styles.inactiveTabBackground, { backgroundColor: inactiveColor }]}>
-            <Text style={styles.inactiveTabText}>Transaction</Text>
-          </View>
-        )}
-      </TouchableOpacity>
+            <Text style={[
+              styles.tabText,
+              isActive && styles.activeTabText,
+            ]}>
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  selectorContainer: {
+  container: {
     flexDirection: 'row',
-    backgroundColor: '#6A1B9A', // Couleur de fond du conteneur des sélecteurs (violet de la barre supérieure)
-    borderRadius: 25,
-    marginHorizontal: 20,
-    marginTop: -25, // Remonter un peu pour chevaucher l'en-tête
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
-    // Assurez-vous que le zIndex est suffisant si d'autres éléments le chevauchent
-    zIndex: 1,
+    backgroundColor: Colors.neutral[100],
+    borderRadius: Radius.full,
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.sm,
+    padding: Spacing.xs,
+    ...Shadows.sm,
   },
-  tabButton: {
+  tab: {
     flex: 1,
-    borderRadius: 25, // Pour que le dégradé et le fond inactif s'adaptent
-    overflow: 'hidden', // Important pour que le border radius fonctionne avec LinearGradient
-  },
-  activeTabBackground: {
-    paddingVertical: 12,
+    paddingVertical: Spacing.sm + 2,
+    paddingHorizontal: Spacing.md,
     alignItems: 'center',
-    borderRadius: 25, // Assurez un arrondi parfait
+    justifyContent: 'center',
+    borderRadius: Radius.full,
   },
-  inactiveTabBackground: {
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 25,
+  activeTab: {
+    backgroundColor: Colors.primary.main,
+    ...Shadows.sm,
+  },
+  tabText: {
+    ...Typography.body,
+    fontWeight: '500',
+    color: Colors.text.secondary,
   },
   activeTabText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  inactiveTabText: {
-    color: '#D1C4E9', // Couleur plus claire pour l'onglet inactif
-    fontSize: 16,
+    color: Colors.text.inverse,
+    fontWeight: '600',
   },
 });
 

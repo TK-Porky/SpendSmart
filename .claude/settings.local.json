@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm uninstall:*)",
+      "Bash(./gradlew.bat clean:*)",
+      "Bash(./gradlew.bat app:installDebug)",
+      "Bash(npx react-native run-android:*)"
+    ]
+  }
+}

@@ -38,3 +38,17 @@ export {
   isAuthError,
   getErrorAction,
 } from './errorHandler';
+
+export {
+  rateLimiter,
+  withRateLimit,
+} from './rateLimiter';
+
+export {
+  triggerHaptic,
+  hapticPress,
+  hapticSuccess,
+  hapticError,
+  hapticSelection,
+  withHaptic,
+} from './haptics';

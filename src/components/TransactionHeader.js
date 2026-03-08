@@ -1,74 +1,98 @@
-// src/components/TransactionHeader.js
+/**
+ * Transaction Header Component
+ * Displays current balance and status message
+ * Minimalist flat design with Modern Teal accent
+ * @module components/TransactionHeader
+ */
 import React from 'react';
-import { Text, StyleSheet } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient'; // Pour le dégradé
-
-// Fonction utilitaire pour le formatage de la devise
-const formatCurrency = (amount, currency = 'XOF') => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
-};
+import { View, Text, StyleSheet } from 'react-native';
+import { formatCurrency } from '../utils';
+import { Colors, Spacing, Radius, Shadows, Typography } from '../constants';
 
 /**
- * Composant d'en-tête pour l'écran des transactions, affichant le solde et le statut.
+ * TransactionHeader - Clean header showing balance and status
  *
- * @param {object} props - Les props du composant.
- * @param {number} props.currentBalance - Le solde actuel à afficher.
- * @param {string} props.currency - La devise.
- * @param {string} props.statusMessage - Le message de statut (ex: "Vous êtes en déficit budgétaire").
- * @param {boolean} [props.isBudgetDeficit=false] - Indique si le statut est un déficit budgétaire pour adapter le style.
+ * @param {object} props - Component props
+ * @param {number} props.currentBalance - Current balance to display
+ * @param {string} props.currency - Currency code
+ * @param {string} props.statusMessage - Status message (e.g., budget deficit warning)
+ * @param {boolean} props.isBudgetDeficit - Whether the status indicates a budget deficit
  */
-const TransactionHeader = ({ currentBalance, currency, statusMessage, isBudgetDeficit = false }) => {
-  const gradientColors = ['#6A1B9A', '#4A148C']; // Violet foncé à violet plus foncé
+const TransactionHeader = ({
+  currentBalance,
+  currency = 'XOF',
+  statusMessage,
+  isBudgetDeficit = false
+}) => {
   return (
-    <LinearGradient
-      colors={gradientColors}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-      style={styles.headerContainer}
-    >
-      <Text style={styles.headerTitle}>Solde actuel</Text>
-      <Text style={styles.balanceText}>{formatCurrency(currentBalance, currency)}</Text>
-      {statusMessage && (
-        <Text style={[styles.statusMessage, isBudgetDeficit && styles.deficitMessage]}>
-          {statusMessage}
-        </Text>
-      )}
-    </LinearGradient>
+    <View style={styles.container}>
+      <View style={styles.balanceCard}>
+        <Text style={styles.label}>Solde actuel</Text>
+        <Text style={styles.balance}>{formatCurrency(currentBalance, currency)}</Text>
+        {statusMessage && (
+          <View style={[
+            styles.statusBadge,
+            isBudgetDeficit ? styles.deficitBadge : styles.normalBadge
+          ]}>
+            <Text style={[
+              styles.statusText,
+              isBudgetDeficit && styles.deficitText
+            ]}>
+              {statusMessage}
+            </Text>
+          </View>
+        )}
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    paddingVertical: 50,
-    paddingHorizontal: 20,
+  container: {
+    backgroundColor: Colors.background.primary,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+  },
+  balanceCard: {
+    backgroundColor: Colors.primary.main,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
     alignItems: 'center',
-    borderBottomLeftRadius: 30, // Pour la courbe en bas à gauche si le design l'exige
-    borderBottomRightRadius: 30, // Pour la courbe en bas à droite
-    overflow: 'hidden', // Important pour que le border radius fonctionne avec LinearGradient
+    ...Shadows.md,
   },
-  headerTitle: {
-    fontSize: 16,
-    color: '#E0E0E0',
-    marginBottom: 5,
+  label: {
+    ...Typography.caption,
+    color: Colors.primary.subtle,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: Spacing.xs,
   },
-  balanceText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 10,
+  balance: {
+    ...Typography.h1,
+    color: Colors.text.inverse,
+    marginBottom: Spacing.sm,
   },
-  statusMessage: {
-    fontSize: 14,
-    color: '#D1C4E9', // Une couleur plus claire pour le texte de statut par défaut
+  statusBadge: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.full,
+    marginTop: Spacing.xs,
   },
-  deficitMessage: {
-    color: '#FFCDD2', // Rouge clair pour le message de déficit
-    fontWeight: 'bold',
+  normalBadge: {
+    backgroundColor: `${Colors.text.inverse}20`,
+  },
+  deficitBadge: {
+    backgroundColor: `${Colors.error}20`,
+  },
+  statusText: {
+    ...Typography.small,
+    color: Colors.text.inverse,
+  },
+  deficitText: {
+    color: '#FFCDD2',
+    fontWeight: '600',
   },
 });
 

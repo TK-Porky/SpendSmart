@@ -1,11 +1,15 @@
+/**
+ * Balance Card Component
+ * Displays current balance with income/expense summary
+ * Minimalist flat design with Modern Teal accent
+ * @module components/BalanceCard
+ */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import LinearGradient from 'react-native-linear-gradient';
 import { formatCurrency } from '../utils';
-import { Colors } from '../constants';
+import { Colors, Spacing, Radius, Shadows, Typography } from '../constants';
 
-// Composant de carte affichant le solde, les profits et les dépenses.
 const BalanceCard = ({
   balance,
   income,
@@ -13,106 +17,135 @@ const BalanceCard = ({
   currency = 'XOF',
   onMorePress,
 }) => {
-  const gradientColors = Colors.gradients.primary;
-  const gradientStart = { x: 0, y: 0 };
-  const gradientEnd = { x: 0, y: 1 };  
   return (
-    <LinearGradient
-      colors={gradientColors}
-      start={gradientStart}
-      end={gradientEnd}
-      style={styles.cardContainer} // Appliquez les styles de conteneur au LinearGradient
+    <View
+      style={styles.card}
+      accessible={true}
+      accessibilityRole="summary"
+      accessibilityLabel={`Solde total: ${formatCurrency(balance, currency)}. Revenus: ${formatCurrency(income, currency)}. Dépenses: ${formatCurrency(Math.abs(expenses), currency)}`}
     >
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Solde Courant</Text>
-        <TouchableOpacity onPress={onMorePress}>
-          <Icon name="dots-horizontal" size={24} color="#FFF" />
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Solde Total</Text>
+        {onMorePress && (
+          <TouchableOpacity
+            onPress={onMorePress}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel="Plus d'options"
+          >
+            <Icon name="dots-horizontal" size={24} color={Colors.neutral[400]} />
+          </TouchableOpacity>
+        )}
       </View>
 
+      {/* Balance Amount */}
       <Text style={styles.balanceText}>{formatCurrency(balance, currency)}</Text>
 
+      {/* Income / Expense Summary */}
       <View style={styles.summaryContainer}>
-        <View style={styles.summaryItemValue}>
-          <View style={styles.summaryItem}>
-            <Icon name="arrow-down-circle-outline" size={20} color="#FFF" />
-            <Text style={styles.summaryLabel}> Profits</Text>
+        {/* Income */}
+        <View style={styles.summaryItem}>
+          <View style={[styles.iconCircle, styles.incomeIcon]}>
+            <Icon name="arrow-down" size={16} color={Colors.success} />
           </View>
-          <Text style={styles.incomeText}>+{formatCurrency(income, currency)}</Text>
+          <View style={styles.summaryTextContainer}>
+            <Text style={styles.summaryLabel}>Revenus</Text>
+            <Text style={styles.incomeText}>+{formatCurrency(income, currency)}</Text>
+          </View>
         </View>
 
-        <View style={styles.summaryItemValue}>
-          <View style={styles.summaryItem}>
-            <Icon name="arrow-up-circle-outline" size={20} color="#FFF" />
-            <Text style={styles.summaryLabel}> Dépenses</Text>
+        {/* Divider */}
+        <View style={styles.divider} />
+
+        {/* Expenses */}
+        <View style={styles.summaryItem}>
+          <View style={[styles.iconCircle, styles.expenseIcon]}>
+            <Icon name="arrow-up" size={16} color={Colors.error} />
           </View>
-          <Text style={styles.expensesText}>-{formatCurrency(Math.abs(expenses), currency)}</Text>
+          <View style={styles.summaryTextContainer}>
+            <Text style={styles.summaryLabel}>Dépenses</Text>
+            <Text style={styles.expenseText}>-{formatCurrency(Math.abs(expenses), currency)}</Text>
+          </View>
         </View>
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  cardContainer: {
-    backgroundColor: '#423AB5',
-    borderRadius: 15,
-    padding: 20,
-    marginHorizontal: 20,
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
+  card: {
+    backgroundColor: Colors.background.card,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.md,
+    ...Shadows.sm,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: Spacing.xs,
   },
   headerTitle: {
-    fontSize: 15,
-    color: '#FFF',
-    fontWeight: '500',
+    ...Typography.caption,
+    color: Colors.neutral[500],
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   balanceText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 20,
+    ...Typography.h1,
+    color: Colors.neutral[800],
+    marginBottom: Spacing.lg,
   },
   summaryContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-    gap: 100,
+    alignItems: 'center',
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
   },
   summaryItem: {
+    flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center'
-  },
-  summaryItemValue: {
-    flexDirection: 'column',
     alignItems: 'center',
   },
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+  },
+  incomeIcon: {
+    backgroundColor: `${Colors.success}15`,
+  },
+  expenseIcon: {
+    backgroundColor: `${Colors.error}15`,
+  },
+  summaryTextContainer: {
+    flex: 1,
+  },
   summaryLabel: {
-    fontSize: 14,
-    color: '#E0E0E0',
-    fontWeight: 'bold',
-    marginLeft: 5,
+    ...Typography.small,
+    color: Colors.neutral[500],
+    marginBottom: 2,
   },
   incomeText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.transaction.income,
+    ...Typography.bodyBold,
+    color: Colors.success,
   },
-  expensesText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.transaction.expense,
+  expenseText: {
+    ...Typography.bodyBold,
+    color: Colors.error,
+  },
+  divider: {
+    width: 1,
+    height: 40,
+    backgroundColor: Colors.border.light,
+    marginHorizontal: Spacing.md,
   },
 });
 

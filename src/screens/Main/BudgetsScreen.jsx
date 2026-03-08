@@ -1,32 +1,28 @@
-// src/screens/Main/BudgetsScreen.js
-
+/**
+ * Budgets Screen
+ * Manages budgets and accounts with flat minimalist design
+ * @module screens/Main/BudgetsScreen
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, FlatList, 
-  Modal, TextInput, Alert, Platform, ScrollView, ActivityIndicator, RefreshControl
+  View, Text, StyleSheet, TouchableOpacity, FlatList,
+  Modal, TextInput, Alert, Platform, ScrollView, RefreshControl
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import LinearGradient from 'react-native-linear-gradient';
 
 import { budgetService } from '../../services/BudgetService';
 import { categoryService } from '../../services/CategoryService';
 import { transactionService } from '../../services/TransactionService';
 import { accountService } from '../../services/AccountService';
+import { SkeletonList, EmptyState, EmptyStatePresets } from '../../components';
+import { Colors, Spacing, Radius, Shadows, Typography } from '../../constants';
+import { formatCurrency } from '../../utils';
 
 import auth from '@react-native-firebase/auth';
 import Budget from '../../models/Budget';
 import Account from '../../models/Account';
-
-const formatCurrency = (amount, currency = 'XOF') => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
-};
 
 const accountTypeIcons = {
   checking: 'bank',
@@ -39,27 +35,27 @@ const accountTypeIcons = {
 
 function BudgetsScreen({ navigation }) {
   const [user, setUser] = useState(auth().currentUser);
-  const [activeTab, setActiveTab] = useState('budgets'); // 'budgets' ou 'accounts'
-  
-  // États pour les budgets
+  const [activeTab, setActiveTab] = useState('budgets');
+
+  // Budget states
   const [budgets, setBudgets] = useState([]);
   const [categories, setCategories] = useState([]);
   const [transactions, setTransactions] = useState([]);
-  
-  // États pour les comptes
+
+  // Account states
   const [accounts, setAccounts] = useState([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // États pour les modales
+  // Modal states
   const [budgetModalVisible, setBudgetModalVisible] = useState(false);
   const [accountModalVisible, setAccountModalVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentBudget, setCurrentBudget] = useState(null);
   const [currentAccount, setCurrentAccount] = useState(null);
 
-  // États du formulaire budget
+  // Budget form states
   const [budgetName, setBudgetName] = useState('');
   const [budgetAmount, setBudgetAmount] = useState('');
   const [startDate, setStartDate] = useState(new Date());
@@ -69,17 +65,15 @@ function BudgetsScreen({ navigation }) {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
-  // États du formulaire compte
+  // Account form states
   const [accountName, setAccountName] = useState('');
   const [accountType, setAccountType] = useState('checking');
   const [initialBalance, setInitialBalance] = useState('');
 
-  // Fonction pour charger toutes les données
   const fetchData = useCallback(async () => {
     setLoading(true);
     setRefreshing(true);
     try {
-      // Charger les budgets et leurs dépendances
       const fetchedBudgets = await budgetService.getBudgets(user.uid);
       setBudgets(fetchedBudgets);
 
@@ -89,7 +83,6 @@ function BudgetsScreen({ navigation }) {
       const fetchedTransactions = await transactionService.getTransactions(user.uid);
       setTransactions(fetchedTransactions);
 
-      // Charger les comptes
       const fetchedAccounts = await accountService.getAccounts(user.uid);
       setAccounts(fetchedAccounts);
 
@@ -105,7 +98,6 @@ function BudgetsScreen({ navigation }) {
   useEffect(() => {
     if (!user.uid) return;
 
-    // Listeners pour les mises à jour en temps réel
     const unsubscribeBudgets = budgetService.listenToBudgets(user.uid, (bgs) => {
       setBudgets(bgs);
     });
@@ -132,7 +124,6 @@ function BudgetsScreen({ navigation }) {
     };
   }, [user.uid, fetchData]);
 
-  // Fonctions pour les budgets
   const calculateSpent = useCallback((budget) => {
     const budgetStartDate = budget.startDate.getTime();
     const budgetEndDate = budget.endDate.getTime();
@@ -243,7 +234,6 @@ function BudgetsScreen({ navigation }) {
     );
   }, [user.uid]);
 
-  // Fonctions pour les comptes
   const handleAddAccount = async () => {
     if (!accountName || !initialBalance) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
@@ -257,13 +247,13 @@ function BudgetsScreen({ navigation }) {
 
     try {
       const newAccount = new Account(
-        user.uid, 
-        accountName, 
-        accountType, 
-        parsedInitialBalance, 
-        '', 
-        new Date(), 
-        new Date(), 
+        user.uid,
+        accountName,
+        accountType,
+        parsedInitialBalance,
+        '',
+        new Date(),
+        new Date(),
         parsedInitialBalance
       );
       await accountService.addAccount(user.uid, newAccount);
@@ -325,7 +315,6 @@ function BudgetsScreen({ navigation }) {
     );
   }, [user.uid]);
 
-  // Fonctions utilitaires
   const openEditBudgetModal = (budget) => {
     setCurrentBudget(budget);
     setBudgetName(budget.name);
@@ -388,11 +377,25 @@ function BudgetsScreen({ navigation }) {
     fetchData();
   }, [fetchData]);
 
-  if (loading) {
+  if (loading && !refreshing) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6A1B9A" />
-        <Text style={styles.loadingText}>Chargement...</Text>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.pageTitle}>Gestion Financière</Text>
+        </View>
+        <View style={styles.tabContainer}>
+          <View style={[styles.tab, styles.activeTab]}>
+            <Icon name="chart-pie" size={20} color={Colors.primary.main} />
+            <Text style={[styles.tabText, styles.activeTabText]}>Budgets</Text>
+          </View>
+          <View style={styles.tab}>
+            <Icon name="bank" size={20} color={Colors.text.secondary} />
+            <Text style={styles.tabText}>Comptes</Text>
+          </View>
+        </View>
+        <View style={{ marginTop: Spacing.lg }}>
+          <SkeletonList count={4} variant="budget" />
+        </View>
       </View>
     );
   }
@@ -400,10 +403,14 @@ function BudgetsScreen({ navigation }) {
   const renderBudgetContent = () => (
     <>
       {budgets.length === 0 ? (
-        <View style={styles.noDataCard}>
-          <Text style={styles.noDataText}>Aucun budget enregistré.</Text>
-          <Text style={styles.noDataSubText}>Appuyez sur "Ajouter" pour en créer un.</Text>
-        </View>
+        <EmptyState
+          {...EmptyStatePresets.budgets}
+          onAction={() => {
+            resetBudgetForm();
+            setBudgetModalVisible(true);
+          }}
+          style={{ paddingVertical: 60 }}
+        />
       ) : (
         <FlatList
           data={budgets}
@@ -414,7 +421,7 @@ function BudgetsScreen({ navigation }) {
             const progress = (spent / item.amount) * 100;
             const remainingDays = Math.ceil((item.endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
             const budgetStatus = remainingDays > 0 ? `${remainingDays} jours restants` : 'Terminé';
-            const progressBarColor = progress > 100 ? '#EF5350' : '#66BB6A';
+            const progressBarColor = progress > 100 ? Colors.error : Colors.success;
             const isOverBudget = progress > 100;
 
             return (
@@ -423,10 +430,10 @@ function BudgetsScreen({ navigation }) {
                   <Text style={styles.itemName}>{item.name}</Text>
                   <View style={styles.itemActions}>
                     <TouchableOpacity onPress={() => openEditBudgetModal(item)} style={styles.iconButton}>
-                      <Icon name="pencil-outline" size={20} color="#6A1B9A" />
+                      <Icon name="pencil-outline" size={20} color={Colors.primary.main} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleDeleteBudget(item.id)} style={styles.iconButton}>
-                      <Icon name="delete-outline" size={20} color="#EF5350" />
+                      <Icon name="delete-outline" size={20} color={Colors.error} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -464,10 +471,14 @@ function BudgetsScreen({ navigation }) {
   const renderAccountContent = () => (
     <>
       {accounts.length === 0 ? (
-        <View style={styles.noDataCard}>
-          <Text style={styles.noDataText}>Aucun compte enregistré.</Text>
-          <Text style={styles.noDataSubText}>Appuyez sur "Ajouter" pour en créer un.</Text>
-        </View>
+        <EmptyState
+          {...EmptyStatePresets.accounts}
+          onAction={() => {
+            resetAccountForm();
+            setAccountModalVisible(true);
+          }}
+          style={{ paddingVertical: 60 }}
+        />
       ) : (
         <FlatList
           data={accounts}
@@ -477,7 +488,7 @@ function BudgetsScreen({ navigation }) {
             <View style={styles.itemCard}>
               <View style={styles.accountItemContent}>
                 <View style={styles.accountIconContainer}>
-                  <Icon name={accountTypeIcons[item.type] || 'wallet'} size={30} color="#fff" />
+                  <Icon name={accountTypeIcons[item.type] || 'wallet'} size={24} color={Colors.text.inverse} />
                 </View>
                 <View style={styles.accountDetails}>
                   <Text style={styles.itemName}>{item.name} {item.isDefault ? '(Par défaut)' : ''}</Text>
@@ -486,10 +497,10 @@ function BudgetsScreen({ navigation }) {
                 </View>
                 <View style={styles.itemActions}>
                   <TouchableOpacity onPress={() => openEditAccountModal(item)} style={styles.iconButton}>
-                    <Icon name="pencil-outline" size={20} color="#6A1B9A" />
+                    <Icon name="pencil-outline" size={20} color={Colors.primary.main} />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => handleDeleteAccount(item.id)} style={styles.iconButton}>
-                    <Icon name="delete-outline" size={20} color="#EF5350" />
+                    <Icon name="delete-outline" size={20} color={Colors.error} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -502,12 +513,8 @@ function BudgetsScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={['#4CAF50', '#204921']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.headerBackground}
-      >
+      {/* Header */}
+      <View style={styles.header}>
         <Text style={styles.pageTitle}>Gestion Financière</Text>
         <TouchableOpacity
           style={styles.addButton}
@@ -521,25 +528,25 @@ function BudgetsScreen({ navigation }) {
             }
           }}
         >
-          <Icon name="plus" size={20} color="#FFF" />
+          <Icon name="plus" size={20} color={Colors.text.inverse} />
           <Text style={styles.addButtonText}>Ajouter</Text>
         </TouchableOpacity>
-      </LinearGradient>
+      </View>
 
-      {/* Navigation par onglets */}
+      {/* Tab Navigation */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'budgets' && styles.activeTab]}
           onPress={() => setActiveTab('budgets')}
         >
-          <Icon name="chart-pie" size={20} color={activeTab === 'budgets' ? '#6A1B9A' : '#777'} />
+          <Icon name="chart-pie" size={20} color={activeTab === 'budgets' ? Colors.primary.main : Colors.text.secondary} />
           <Text style={[styles.tabText, activeTab === 'budgets' && styles.activeTabText]}>Budgets</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'accounts' && styles.activeTab]}
           onPress={() => setActiveTab('accounts')}
         >
-          <Icon name="bank" size={20} color={activeTab === 'accounts' ? '#6A1B9A' : '#777'} />
+          <Icon name="bank" size={20} color={activeTab === 'accounts' ? Colors.primary.main : Colors.text.secondary} />
           <Text style={[styles.tabText, activeTab === 'accounts' && styles.activeTabText]}>Comptes</Text>
         </TouchableOpacity>
       </View>
@@ -547,13 +554,20 @@ function BudgetsScreen({ navigation }) {
       <ScrollView
         style={styles.scrollViewContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary.main]}
+            tintColor={Colors.primary.main}
+          />
+        }
       >
         {activeTab === 'budgets' ? renderBudgetContent() : renderAccountContent()}
         <View style={{ height: 50 }} />
       </ScrollView>
 
-      {/* Modal pour les budgets */}
+      {/* Budget Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -570,14 +584,14 @@ function BudgetsScreen({ navigation }) {
             <TextInput
               style={styles.modalInput}
               placeholder="Nom du budget (ex: Alimentation mensuelle)"
-              placeholderTextColor="#888"
+              placeholderTextColor={Colors.text.tertiary}
               value={budgetName}
               onChangeText={setBudgetName}
             />
             <TextInput
               style={styles.modalInput}
               placeholder="Montant du budget (ex: 50000)"
-              placeholderTextColor="#888"
+              placeholderTextColor={Colors.text.tertiary}
               keyboardType="numeric"
               value={budgetAmount}
               onChangeText={setBudgetAmount}
@@ -599,7 +613,7 @@ function BudgetsScreen({ navigation }) {
             <Text style={styles.label}>Date de début</Text>
             <TouchableOpacity onPress={() => setShowStartDatePicker(true)} style={styles.datePickerButton}>
               <Text style={styles.datePickerText}>{startDate.toLocaleDateString()}</Text>
-              <Icon name="calendar-month-outline" size={20} color="#6A1B9A" />
+              <Icon name="calendar-month-outline" size={20} color={Colors.primary.main} />
             </TouchableOpacity>
             {showStartDatePicker && (
               <DateTimePicker
@@ -613,7 +627,7 @@ function BudgetsScreen({ navigation }) {
             <Text style={styles.label}>Date de fin</Text>
             <TouchableOpacity onPress={() => setShowEndDatePicker(true)} style={styles.datePickerButton}>
               <Text style={styles.datePickerText}>{endDate.toLocaleDateString()}</Text>
-              <Icon name="calendar-month-outline" size={20} color="#6A1B9A" />
+              <Icon name="calendar-month-outline" size={20} color={Colors.primary.main} />
             </TouchableOpacity>
             {showEndDatePicker && (
               <DateTimePicker
@@ -632,12 +646,12 @@ function BudgetsScreen({ navigation }) {
                     key={cat.id}
                     style={[
                       styles.categoryChip,
-                      selectedCategoryIds.includes(cat.id) ? styles.selectedCategoryChip : {},
-                      { backgroundColor: selectedCategoryIds.includes(cat.id) ? (cat.color || '#6A1B9A') : '#e0e0e0' }
+                      selectedCategoryIds.includes(cat.id) && styles.selectedCategoryChip,
+                      { backgroundColor: selectedCategoryIds.includes(cat.id) ? (cat.color || Colors.primary.main) : Colors.neutral[200] }
                     ]}
                     onPress={() => toggleCategorySelection(cat.id)}
                   >
-                    <Text style={[styles.categoryChipText, selectedCategoryIds.includes(cat.id) ? styles.selectedCategoryChipText : {}]}>
+                    <Text style={[styles.categoryChipText, selectedCategoryIds.includes(cat.id) && styles.selectedCategoryChipText]}>
                       {cat.name}
                     </Text>
                   </TouchableOpacity>
@@ -655,13 +669,13 @@ function BudgetsScreen({ navigation }) {
               style={[styles.modalActionButton, styles.modalCancelButton]}
               onPress={() => { setBudgetModalVisible(false); resetBudgetForm(); }}
             >
-              <Text style={styles.modalActionButtonText}>Annuler</Text>
+              <Text style={styles.modalCancelButtonText}>Annuler</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
       </Modal>
 
-      {/* Modal pour les comptes */}
+      {/* Account Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -677,11 +691,11 @@ function BudgetsScreen({ navigation }) {
             <TextInput
               style={styles.modalInput}
               placeholder="Nom du compte (ex: Compte Courant)"
-              placeholderTextColor="#888"
+              placeholderTextColor={Colors.text.tertiary}
               value={accountName}
               onChangeText={setAccountName}
             />
-            
+
             <Text style={styles.label}>Type de compte</Text>
             <View style={styles.pickerContainer}>
               <Picker
@@ -697,17 +711,17 @@ function BudgetsScreen({ navigation }) {
                 <Picker.Item label="Autre" value="other" />
               </Picker>
             </View>
-            
+
             <TextInput
               style={styles.modalInput}
               placeholder="Solde Initial"
-              placeholderTextColor="#888"
+              placeholderTextColor={Colors.text.tertiary}
               keyboardType="numeric"
               value={initialBalance}
               onChangeText={setInitialBalance}
               editable={!editMode}
             />
-            
+
             <TouchableOpacity
               style={styles.modalActionButton}
               onPress={editMode ? handleUpdateAccount : handleAddAccount}
@@ -718,7 +732,7 @@ function BudgetsScreen({ navigation }) {
               style={[styles.modalActionButton, styles.modalCancelButton]}
               onPress={() => { setAccountModalVisible(false); resetAccountForm(); }}
             >
-              <Text style={styles.modalActionButtonText}>Annuler</Text>
+              <Text style={styles.modalCancelButtonText}>Annuler</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -730,293 +744,238 @@ function BudgetsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: Colors.background.secondary,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#6A1B9A',
-  },
-  headerBackground: {
-    paddingTop: 50,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
+  header: {
+    backgroundColor: Colors.background.primary,
+    paddingTop: Spacing.xl + Spacing.lg,
+    paddingBottom: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    overflow: 'hidden',
   },
   pageTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFF',
+    ...Typography.h2,
+    color: Colors.text.primary,
     flex: 1,
-    textAlign: 'center',
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
+    backgroundColor: Colors.primary.main,
+    borderRadius: Radius.full,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
   },
   addButtonText: {
-    color: '#FFF',
-    marginLeft: 5,
-    fontWeight: '600',
+    ...Typography.bodyBold,
+    color: Colors.text.inverse,
+    marginLeft: Spacing.xs,
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    backgroundColor: Colors.background.card,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    ...Shadows.sm,
   },
   tab: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    marginHorizontal: 5,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.full,
+    marginHorizontal: Spacing.xs,
   },
   activeTab: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: Colors.primary.subtle,
   },
   tabText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#777',
+    ...Typography.body,
+    marginLeft: Spacing.sm,
+    color: Colors.text.secondary,
     fontWeight: '500',
   },
   activeTabText: {
-    color: '#6A1B9A',
-    fontWeight: 'bold',
+    color: Colors.primary.main,
+    fontWeight: '600',
   },
   scrollViewContent: {
     flex: 1,
-    marginTop: -20,
-    paddingTop: 20,
-  },
-  noDataCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    marginHorizontal: 20,
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-    alignItems: 'center',
-  },
-  noDataText: {
-    fontSize: 16,
-    color: '#777',
-    marginBottom: 5,
-    textAlign: 'center',
-  },
-  noDataSubText: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
+    marginTop: Spacing.sm,
   },
   itemCard: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 15,
-    marginHorizontal: 20,
-    marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
+    backgroundColor: Colors.background.card,
+    padding: Spacing.md,
+    borderRadius: Radius.lg,
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.sm,
+    ...Shadows.sm,
   },
   itemHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: Spacing.xs,
   },
   itemName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    ...Typography.bodyBold,
+    color: Colors.text.primary,
     flex: 1,
   },
   itemActions: {
     flexDirection: 'row',
   },
   iconButton: {
-    marginLeft: 10,
-    padding: 5,
+    marginLeft: Spacing.sm,
+    padding: Spacing.xs,
   },
-  // Styles spécifiques aux budgets
+  // Budget specific styles
   budgetPeriod: {
-    fontSize: 13,
-    color: '#777',
-    marginBottom: 10,
+    ...Typography.small,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.sm,
   },
   budgetAmounts: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   budgetAmountText: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#333',
+    ...Typography.caption,
+    fontWeight: '600',
+    color: Colors.text.primary,
   },
   overBudgetAmount: {
-    color: '#EF5350',
+    color: Colors.error,
   },
   progressContainer: {
-    height: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 5,
+    height: 8,
+    backgroundColor: Colors.neutral[200],
+    borderRadius: Radius.xs,
     overflow: 'hidden',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   progressBar: {
     height: '100%',
-    borderRadius: 5,
+    borderRadius: Radius.xs,
   },
   budgetStatusText: {
-    fontSize: 13,
-    color: '#777',
+    ...Typography.small,
+    color: Colors.text.secondary,
     textAlign: 'right',
   },
   overBudgetStatusText: {
-    color: '#EF5350',
-    fontWeight: 'bold',
+    color: Colors.error,
+    fontWeight: '600',
   },
   budgetCategories: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 5,
+    ...Typography.small,
+    color: Colors.text.tertiary,
+    marginTop: Spacing.xs,
     fontStyle: 'italic',
   },
-  // Styles spécifiques aux comptes
+  // Account specific styles
   accountItemContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   accountIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#007bff',
+    width: 48,
+    height: 48,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.primary.main,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: Spacing.md,
   },
   accountDetails: {
     flex: 1,
   },
   accountType: {
-    fontSize: 14,
-    color: '#777',
+    ...Typography.small,
+    color: Colors.text.secondary,
     marginTop: 2,
   },
   accountBalance: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#28a745',
-    marginTop: 5,
+    ...Typography.bodyBold,
+    color: Colors.success,
+    marginTop: Spacing.xs,
   },
-  // Styles des modales
+  // Modal styles
   centeredView: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalView: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 25,
+    backgroundColor: Colors.background.card,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
     width: '90%',
     maxHeight: '90%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    ...Shadows.lg,
   },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#333',
+    ...Typography.h2,
+    marginBottom: Spacing.lg,
+    color: Colors.text.primary,
     textAlign: 'center',
   },
   modalInput: {
     width: '100%',
-    padding: 12,
-    marginBottom: 15,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    fontSize: 16,
-    color: '#333',
-    backgroundColor: '#f9f9f9',
+    borderColor: Colors.border.light,
+    borderRadius: Radius.sm,
+    ...Typography.body,
+    color: Colors.text.primary,
+    backgroundColor: Colors.background.input,
   },
   label: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#555',
+    ...Typography.bodyBold,
+    marginBottom: Spacing.sm,
+    color: Colors.text.secondary,
     alignSelf: 'flex-start',
-    marginTop: 10,
-    fontWeight: '500',
+    marginTop: Spacing.sm,
   },
   pickerContainer: {
     width: '100%',
-    marginBottom: 15,
+    marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
+    borderColor: Colors.border.light,
+    borderRadius: Radius.sm,
     overflow: 'hidden',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: Colors.background.input,
   },
   picker: {
     width: '100%',
+    color: Colors.text.primary,
   },
   datePickerButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    padding: 12,
-    marginBottom: 15,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#f9f9f9',
+    borderColor: Colors.border.light,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.background.input,
   },
   datePickerText: {
-    fontSize: 16,
-    color: '#333',
+    ...Typography.body,
+    color: Colors.text.primary,
   },
   categoryChipsScrollView: {
     maxHeight: 100,
-    marginBottom: 15,
+    marginBottom: Spacing.md,
   },
   categorySelectionContainer: {
     flexDirection: 'row',
@@ -1024,36 +983,41 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   categoryChip: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    margin: 4,
-    backgroundColor: '#e0e0e0',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.full,
+    margin: Spacing.xs,
   },
-  selectedCategoryChip: {
-    // Style géré dynamiquement
-  },
+  selectedCategoryChip: {},
   categoryChipText: {
-    fontSize: 14,
-    color: '#333',
+    ...Typography.caption,
+    color: Colors.text.primary,
   },
   selectedCategoryChipText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: Colors.text.inverse,
+    fontWeight: '600',
   },
   modalActionButton: {
-    backgroundColor: '#6A1B9A',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    backgroundColor: Colors.primary.main,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.sm,
     width: '100%',
     alignItems: 'center',
-    marginTop: 15,
+    marginTop: Spacing.md,
   },
   modalActionButtonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    ...Typography.button,
+    color: Colors.text.inverse,
+  },
+  modalCancelButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.error,
+  },
+  modalCancelButtonText: {
+    ...Typography.button,
+    color: Colors.error,
   },
 });
 
