@@ -1,7 +1,10 @@
-// Importations
+/**
+ * SpendSmart - Personal Finance Management App
+ * @module App
+ */
 import 'react-native-gesture-handler';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, View, StyleSheet, StatusBar } from 'react-native';
+import { View, StyleSheet, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 
@@ -9,8 +12,17 @@ import auth from '@react-native-firebase/auth';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import AppNavigator from './src/navigation/AppNavigator';
 
+// Components
+import { ErrorBoundary, LoadingSpinner, OfflineBanner } from './src/components';
+
+// Context
+import { ToastProvider } from './src/context/ToastContext';
+
 // Services
 import { notificationService } from './src/services/NotificationService';
+
+// Constants
+import { Colors } from './src/constants';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -55,16 +67,21 @@ function App() {
   if (initializing) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <LoadingSpinner fullScreen message="Chargement..." />
       </View>
     );
   }
 
   return (
-    <NavigationContainer>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      {user ? <AppNavigator /> : <AuthNavigator />}
-    </NavigationContainer>
+    <ErrorBoundary>
+      <ToastProvider>
+        <NavigationContainer>
+          <StatusBar barStyle="dark-content" backgroundColor={Colors.background.primary} />
+          <OfflineBanner />
+          {user ? <AppNavigator /> : <AuthNavigator />}
+        </NavigationContainer>
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 

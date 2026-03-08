@@ -43,42 +43,32 @@ Clean, organized codebase with no dead code
 
 ---
 
-## Milestone 1: Stability & Security
+## Milestone 1: Stability & Security (In Progress)
 > **Focus**: Make the app secure and crash-free
 
 ### 1.1 Security
 
-- [ ] **1.1.1** Create `firestore.rules` with proper user data isolation
-  ```
-  rules_version = '2';
-  service cloud.firestore {
-    match /databases/{database}/documents {
-      match /users/{userId}/{document=**} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-    }
-  }
-  ```
-- [ ] **1.1.2** Create `storage.rules` for any future file uploads
-- [ ] **1.1.3** Implement input sanitization in all form screens
+- [x] **1.1.1** Create `firestore.rules` with proper user data isolation
+- [x] **1.1.2** Create `storage.rules` for any future file uploads
+- [x] **1.1.3** Implement input sanitization in all form screens (`validators.js`)
 - [ ] **1.1.4** Add rate limiting awareness for Firebase operations
 - [ ] **1.1.5** Secure sensitive data with proper AsyncStorage encryption consideration
 
 ### 1.2 Error Handling
 
-- [ ] **1.2.1** Create `src/utils/errorHandler.js` - Centralized error handling
-- [ ] **1.2.2** Create `src/components/ErrorBoundary.jsx` - React error boundary
+- [x] **1.2.1** Create `src/utils/errorHandler.js` - Centralized error handling
+- [x] **1.2.2** Create `src/components/ErrorBoundary.jsx` - React error boundary
 - [ ] **1.2.3** Add try-catch with user-friendly messages in all screens
-- [ ] **1.2.4** Implement toast/snackbar notification system for errors
-- [ ] **1.2.5** Add error states to all data-fetching screens
-- [ ] **1.2.6** Handle network connectivity errors gracefully
+- [x] **1.2.4** Implement toast/snackbar notification system (`ToastContext.js`)
+- [x] **1.2.5** Add error states to all data-fetching screens (`EmptyState.jsx`)
+- [x] **1.2.6** Handle network connectivity errors gracefully (`OfflineBanner.jsx`, `useNetworkStatus.js`)
 
 ### 1.3 Data Integrity
 
-- [ ] **1.3.1** Add validation in all service `add*` methods
+- [x] **1.3.1** Add validation in all service `add*` methods (already in services)
 - [ ] **1.3.2** Implement data migration strategy for schema changes
-- [ ] **1.3.3** Add transaction rollback handling for failed operations
-- [ ] **1.3.4** Validate all user inputs before Firestore writes
+- [x] **1.3.3** Add transaction rollback handling for failed operations (already in TransactionService)
+- [x] **1.3.4** Validate all user inputs before Firestore writes (`validators.js`)
 
 ### Deliverable
 Secure, stable app with proper error handling and data validation
@@ -90,7 +80,7 @@ Secure, stable app with proper error handling and data validation
 
 ### 2.1 Loading States
 
-- [ ] **2.1.1** Create `src/components/LoadingSpinner.jsx`
+- [x] **2.1.1** Create `src/components/LoadingSpinner.jsx`
 - [ ] **2.1.2** Create `src/components/SkeletonCard.jsx` for list loading
 - [ ] **2.1.3** Add loading states to:
   - [ ] HomeScreen (balance, transactions)
@@ -438,8 +428,8 @@ Production-ready app with monitoring, security, and store assets
 | Milestone | Status | Progress |
 |-----------|--------|----------|
 | M0: Cleanup | ✅ Complete | 100% |
-| M1: Stability | Not Started | 0% |
-| M2: UX Polish | Not Started | 0% |
+| M1: Stability | In Progress | 75% |
+| M2: UX Polish | Started | 5% |
 | M3: Features | Not Started | 0% |
 | M4: QA | Not Started | 0% |
 | M5: Production | Not Started | 0% |

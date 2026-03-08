@@ -1,0 +1,63 @@
+rules_version = '2';
+
+/**
+ * Firebase Storage Security Rules for SpendSmart
+ *
+ * Storage Structure:
+ * /users/{userId}/
+ *   ├── profile/avatar.jpg
+ *   └── receipts/{transactionId}/{filename}
+ */
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user owns the path
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Helper function to validate image file
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 5 * 1024 * 1024; // Max 5MB
+    }
+
+    // Helper function to validate document file (PDF, images)
+    function isValidDocument() {
+      return (request.resource.contentType.matches('image/.*') ||
+              request.resource.contentType == 'application/pdf') &&
+             request.resource.size < 10 * 1024 * 1024; // Max 10MB
+    }
+
+    // ==========================================
+    // USER FILES
+    // ==========================================
+    match /users/{userId}/{allPaths=**} {
+      // Users can only access their own files
+      allow read: if isOwner(userId);
+
+      // Profile images
+      match /profile/{fileName} {
+        allow write: if isOwner(userId) && isValidImage();
+      }
+
+      // Receipt attachments
+      match /receipts/{transactionId}/{fileName} {
+        allow write: if isOwner(userId) && isValidDocument();
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // ==========================================
+    // DENY ALL OTHER ACCESS
+    // ==========================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
