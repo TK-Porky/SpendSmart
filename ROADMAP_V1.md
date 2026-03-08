@@ -131,6 +131,18 @@ Secure, stable app with proper error handling and data validation
 - [x] **2.6.4** Create reusable UI components (Button, Input, Card)
 - [x] **2.6.5** Update all screens with new design tokens
 
+### 2.7 UI Rebuild & Missing Screens
+
+- [x] **2.7.1** Create SplashScreen with app branding and loading animation
+- [x] **2.7.2** Create WelcomeScreen for first-time user onboarding
+- [x] **2.7.3** Create TransactionDetailScreen (view/edit transaction)
+- [x] **2.7.4** Create AccountScreen (account details with transaction history)
+- [x] **2.7.5** Create SettingsScreen (app preferences, notifications, security)
+- [x] **2.7.6** Remove navigation placeholder screens
+- [x] **2.7.7** Update Quick Add functionality to use existing forms
+- [x] **2.7.8** Update ProfileScreen with working navigation to Settings
+- [x] **2.7.9** Update formatDate utility to support multiple format types
+
 ### Deliverable
 Polished, accessible UI with proper feedback and loading states
 
@@ -433,7 +445,7 @@ Production-ready app with monitoring, security, and store assets
 |-----------|--------|----------|
 | M0: Cleanup | ✅ Complete | 100% |
 | M1: Stability | ✅ Complete | 95% |
-| M2: UX Polish | In Progress | 90% |
+| M2: UX Polish | In Progress | 95% |
 | M3: Features | Not Started | 0% |
 | M4: QA | Not Started | 0% |
 | M5: Production | Not Started | 0% |
@@ -442,4 +454,4 @@ Production-ready app with monitoring, security, and store assets
 ---
 
 *Last Updated: March 2026*
-*Version: Draft 1.0*
+*Version: Draft 1.1*

@@ -1,203 +1,231 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform } from 'react-native';
+import { Colors, Spacing, Radius, Shadows, Typography } from '../../constants';
 
 export const styles = StyleSheet.create({
-    fullScreenContainer: {
-      flex: 1,
-      backgroundColor: '#f8f8f8',
-    },
-    scrollContainer: {
-      flexGrow: 1,
-      justifyContent: 'flex-start', // Aligner le contenu en haut
-      paddingBottom: 40, // Padding en bas pour le scroll
-    },
-    headerBackground: {
-      paddingTop: Platform.OS === 'android' ? 50 : 80, // Ajuster pour la barre de statut
-      paddingBottom: 100, // Espace pour que le formulaire remonte dessus
-      paddingHorizontal: 20,
-      alignItems: 'center',
-      borderBottomLeftRadius: 30,
-      borderBottomRightRadius: 30,
-      overflow: 'hidden',
-      marginBottom: -70, // Remonter le header pour que le formulaire le chevauche
-    },
-    logo: {
-      fontSize: 32,
-      fontWeight: 'bold',
-      color: '#FFF',
-      marginBottom: 8,
-      fontFamily: 'Roboto-Bold', // Si vous avez une police personnalisée
-    },
-    subtitle: {
-      fontSize: 16,
-      color: '#E0E0E0', // Couleur plus claire pour le slogan
-      textAlign: 'center',
-      marginBottom: 20,
-    },
-    toggleContainer: {
-      flexDirection: 'row',
-      backgroundColor: 'rgba(255,255,255,0.2)', // Fond semi-transparent pour le sélecteur
-      borderRadius: 25, // Plus arrondi
-      padding: 5,
-      width: '80%', // Largeur fixe pour le sélecteur
-      alignSelf: 'center', // Centrer le sélecteur
-      marginTop: 20, // Espace sous le slogan
-    },
-    toggleButton: {
-      flex: 1,
-      borderRadius: 25,
-      overflow: 'hidden', // Important pour le dégradé interne
-    },
-    toggleButtonInner: {
-      paddingVertical: 12,
-      alignItems: 'center',
-      borderRadius: 25,
-    },
-    activeToggle: {
-      // Le style actif est géré par LinearGradient dans toggleButtonInner
-    },
-    toggleText: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: '#E0E0E0', // Texte inactif clair
-    },
-    activeToggleText: {
-      color: '#fff', // Texte actif blanc
-    },
-    formContainer: {
-      backgroundColor: '#fff',
-      borderRadius: 20,
-      marginHorizontal: 20, // Marges latérales
-      padding: 24,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 5,
-      zIndex: 1, // Pour s'assurer qu'il est au-dessus du header
-    },
-    inputGroup: {
-      marginBottom: 16,
-    },
-    label: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: '#333',
-      marginBottom: 8,
-    },
-    input: {
-      borderWidth: 1,
-      borderColor: '#ddd', // Bordure plus claire
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      fontSize: 16,
-      backgroundColor: '#f9f9f9', // Fond légèrement gris pour les inputs
-      color: '#333',
-    },
-    inputError: {
-      borderColor: '#dc3545', // Rouge pour les erreurs
-    },
-    errorText: {
-      color: '#dc3545',
-      fontSize: 12,
-      marginTop: 4,
-    },
-    passwordContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: '#ddd',
-      borderRadius: 12,
-      backgroundColor: '#f9f9f9',
-    },
-    passwordInput: {
-      flex: 1,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      fontSize: 16,
-      color: '#333',
-    },
-    eyeButton: {
-      padding: 14,
-    },
-    forgotPasswordButton: {
-      alignSelf: 'flex-end',
-      marginBottom: 24,
-    },
-    forgotPasswordText: {
-      color: '#6A1B9A', // Couleur violette pour le lien
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    submitButton: {
-      backgroundColor: '#6A1B9A', // Bouton principal violet
-      borderRadius: 12,
-      paddingVertical: 16,
-      alignItems: 'center',
-      marginBottom: 24,
-      shadowColor: '#6A1B9A', // Ombre de la couleur du bouton
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 5,
-      elevation: 8,
-    },
-    disabledButton: {
-      backgroundColor: '#ccc',
-      shadowColor: 'transparent',
-      elevation: 0,
-    },
-    submitButtonText: {
-      color: '#fff',
-      fontSize: 16,
-      fontWeight: 'bold',
-    },
-    dividerContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 24,
-    },
-    divider: {
-      flex: 1,
-      height: 1,
-      backgroundColor: '#e0e0e0',
-    },
-    dividerText: {
-      marginHorizontal: 16,
-      color: '#666',
-      fontSize: 14,
-    },
-    socialButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: '#ddd',
-      borderRadius: 12,
-      paddingVertical: 14,
-      marginBottom: 12, // Moins d'espace entre les boutons sociaux
-      backgroundColor: '#fff',
-    },
-    socialIcon: {
-      marginRight: 10,
-    },
-    socialButtonText: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: '#333',
-    },
-    switchContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: 20, // Espace après les boutons sociaux
-    },
-    switchText: {
-      color: '#666',
-      fontSize: 14,
-    },
-    switchLink: {
-      color: '#6A1B9A', // Lien violet
-      fontSize: 14,
-      fontWeight: '600',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.secondary,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: Spacing.xl,
+  },
+  header: {
+    paddingTop: Platform.OS === 'ios' ? Spacing.xxl + Spacing.xl : Spacing.xxl,
+    paddingBottom: Spacing.xxl * 2,
+    paddingHorizontal: Spacing.md,
+    borderBottomLeftRadius: Radius.xl * 2,
+    borderBottomRightRadius: Radius.xl * 2,
+  },
+  logoContainer: {
+    alignItems: 'center',
+  },
+  logoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: Radius.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  appName: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: Colors.text.inverse,
+    marginBottom: Spacing.xs,
+    letterSpacing: -0.5,
+  },
+  tagline: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+  },
+  formCard: {
+    backgroundColor: Colors.background.card,
+    marginHorizontal: Spacing.md,
+    marginTop: -Spacing.xxl * 1.5,
+    borderRadius: Radius.xl,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    ...Shadows.lg,
+    elevation: 8,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: Colors.background.secondary,
+    borderRadius: Radius.md,
+    padding: Spacing.xs,
+    marginBottom: Spacing.xl,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Radius.sm,
+    position: 'relative',
+  },
+  activeTab: {
+    backgroundColor: Colors.background.card,
+    ...Shadows.sm,
+  },
+  tabText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.text.secondary,
+  },
+  activeTabText: {
+    color: Colors.primary.main,
+    fontWeight: '700',
+  },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: -4,
+    left: '25%',
+    right: '25%',
+    height: 3,
+    backgroundColor: Colors.primary.main,
+    borderRadius: Radius.full,
+  },
+  formContent: {
+    gap: Spacing.md,
+  },
+  inputGroup: {
+    marginBottom: Spacing.xs,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text.primary,
+    marginBottom: Spacing.xs,
+  },
+  input: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background.secondary,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    height: 52,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  inputError: {
+    borderColor: Colors.error,
+    backgroundColor: `${Colors.error}05`,
+  },
+  inputIcon: {
+    marginRight: Spacing.sm,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 15,
+    color: Colors.text.primary,
+    padding: 0,
+    height: '100%',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background.secondary,
+    borderRadius: Radius.md,
+    paddingLeft: Spacing.md,
+    height: 52,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  eyeButton: {
+    paddingHorizontal: Spacing.md,
+    height: '100%',
+    justifyContent: 'center',
+  },
+  errorText: {
+    fontSize: 12,
+    color: Colors.error,
+    marginTop: Spacing.xs,
+    marginLeft: Spacing.xs,
+  },
+  forgotPasswordButton: {
+    alignSelf: 'flex-end',
+    paddingVertical: Spacing.xs,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.primary.main,
+  },
+  submitButton: {
+    borderRadius: Radius.md,
+    overflow: 'hidden',
+    marginTop: Spacing.md,
+    height: 52,
+    ...Shadows.md,
+    elevation: 6,
+  },
+  disabledButton: {
+    opacity: 0.6,
+    ...Shadows.sm,
+    elevation: 2,
+  },
+  submitButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    height: '100%',
+    paddingHorizontal: Spacing.lg,
+  },
+  submitButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.text.inverse,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: Spacing.lg,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.border.light,
+  },
+  dividerText: {
+    fontSize: 13,
+    color: Colors.text.tertiary,
+    marginHorizontal: Spacing.md,
+    fontWeight: '500',
+  },
+  socialButtonsContainer: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    justifyContent: 'center',
+  },
+  socialButton: {
+    width: 56,
+    height: 56,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.background.secondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+    ...Shadows.sm,
+  },
+  termsText: {
+    fontSize: 12,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginTop: Spacing.lg,
+    lineHeight: 18,
+    paddingHorizontal: Spacing.sm,
+  },
+  termsLink: {
+    color: Colors.primary.main,
+    fontWeight: '600',
+  },
+  bottomSpacer: {
+    height: Spacing.xl,
+  },
   });

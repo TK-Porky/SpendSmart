@@ -4,16 +4,18 @@
  */
 
 /**
- * Formats a date with relative labels (Today, Yesterday) or full date
+ * Formats a date with various format options
  * @param {Date|string|number|object} date - The date to format (Date object, ISO string, timestamp, or Firestore Timestamp)
+ * @param {string} [format='relative'] - Format type: 'relative', 'short', 'full', 'datetime'
  * @param {string} [locale='fr-FR'] - The locale for formatting
  * @returns {string} Formatted date string
  * @example
  * formatDate(new Date()) // "Aujourd'hui"
- * formatDate(yesterday) // "Hier"
- * formatDate(lastWeek) // "2 mars 2026"
+ * formatDate(new Date(), 'short') // "8 mars"
+ * formatDate(new Date(), 'full') // "8 mars 2026"
+ * formatDate(new Date(), 'datetime') // "8 mars 2026, 14:30"
  */
-export const formatDate = (date, locale = 'fr-FR') => {
+export const formatDate = (date, format = 'relative', locale = 'fr-FR') => {
   if (!date) return '';
 
   // Handle Firestore Timestamp objects
@@ -29,25 +31,52 @@ export const formatDate = (date, locale = 'fr-FR') => {
     return '';
   }
 
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
+  // Handle different format types
+  switch (format) {
+    case 'short':
+      return transactionDate.toLocaleDateString(locale, {
+        day: 'numeric',
+        month: 'short',
+      });
 
-  // Reset time for comparison
-  const dateOnly = new Date(transactionDate.getFullYear(), transactionDate.getMonth(), transactionDate.getDate());
-  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+    case 'full':
+      return transactionDate.toLocaleDateString(locale, {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
 
-  if (dateOnly.getTime() === todayOnly.getTime()) {
-    return "Aujourd'hui";
-  } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
-    return 'Hier';
-  } else {
-    return transactionDate.toLocaleDateString(locale, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+    case 'datetime':
+      return transactionDate.toLocaleDateString(locale, {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+    case 'relative':
+    default:
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+
+      // Reset time for comparison
+      const dateOnly = new Date(transactionDate.getFullYear(), transactionDate.getMonth(), transactionDate.getDate());
+      const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+
+      if (dateOnly.getTime() === todayOnly.getTime()) {
+        return "Aujourd'hui";
+      } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
+        return 'Hier';
+      } else {
+        return transactionDate.toLocaleDateString(locale, {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        });
+      }
   }
 };
 

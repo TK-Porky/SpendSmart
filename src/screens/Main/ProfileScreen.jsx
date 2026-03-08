@@ -1,80 +1,141 @@
 /**
- * Profile Screen
- * User profile management and settings
- * Minimalist flat design with Modern Teal accent
+ * ProfileScreen
+ * Modern user profile with settings and account info
  * @module screens/Main/ProfileScreen
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Image,
+  RefreshControl,
+  Platform
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
 import { LoadingSpinner } from '../../components';
-import { Colors, Spacing, Radius, Shadows, Typography } from '../../constants';
+import { Colors, Spacing, Radius, Shadows } from '../../constants';
+
+// Import services for stats
+import { transactionService } from '../../services/TransactionService';
+import { budgetService } from '../../services/BudgetService';
+import { accountService } from '../../services/AccountService';
 
 function ProfileScreen() {
   const navigation = useNavigation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Stats
+  const [stats, setStats] = useState({
+    transactions: 0,
+    budgets: 0,
+    accounts: 0,
+  });
 
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(currentUser => {
       setUser(currentUser);
       setLoading(false);
+      if (currentUser) {
+        fetchStats(currentUser.uid);
+      }
     });
 
     return subscriber;
   }, []);
 
+  const fetchStats = useCallback(async (uid) => {
+    try {
+      const [transactions, budgets, accounts] = await Promise.all([
+        transactionService.getTransactions(uid),
+        budgetService.getBudgets(uid),
+        accountService.getAccounts(uid),
+      ]);
+
+      setStats({
+        transactions: transactions.length,
+        budgets: budgets.length,
+        accounts: accounts.length,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    if (user?.uid) {
+      setRefreshing(true);
+      fetchStats(user.uid).finally(() => setRefreshing(false));
+    }
+  }, [user?.uid, fetchStats]);
+
   const handleLogout = () => {
     Alert.alert(
-      "Déconnexion",
-      "Êtes-vous sûr de vouloir vous déconnecter ?",
+      'Logout',
+      'Are you sure you want to logout?',
       [
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: "Annuler",
-          style: "cancel"
-        },
-        {
-          text: "Se déconnecter",
+          text: 'Logout',
           onPress: async () => {
             try {
               await auth().signOut();
-              console.log("Utilisateur déconnecté !");
             } catch (error) {
-              console.error("Erreur lors de la déconnexion:", error);
-              Alert.alert("Erreur de déconnexion", "Impossible de se déconnecter. Veuillez réessayer.");
+              console.error('Logout error:', error);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
             }
           },
-          style: "destructive"
-        }
+          style: 'destructive',
+        },
       ],
       { cancelable: true }
     );
   };
 
   const navigateTo = (screenName) => {
-    navigation.navigate(screenName);
+    // TODO: Navigate to settings screens
+    console.log('Navigate to:', screenName);
+    Alert.alert('Coming Soon', `${screenName} screen will be available soon.`);
+  };
+
+  const handleEditProfile = () => {
+    // TODO: Navigate to edit profile
+    console.log('Edit profile');
+    Alert.alert('Coming Soon', 'Edit profile will be available soon.');
+  };
+
+  const handleEditAvatar = () => {
+    // TODO: Implement avatar picker
+    console.log('Edit avatar');
+    Alert.alert('Coming Soon', 'Avatar editing will be available soon.');
   };
 
   if (loading) {
-    return (
-      <LoadingSpinner message="Chargement du profil..." fullScreen />
-    );
+    return <LoadingSpinner message="Loading profile..." fullScreen />;
   }
 
   if (!user) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Aucun utilisateur connecté.</Text>
-        <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.loginButtonText}>Se connecter</Text>
+        <Icon name="account-off-outline" size={64} color={Colors.text.secondary} />
+        <Text style={styles.emptyText}>No user logged in</Text>
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={() => navigation.navigate('Login')}
+        >
+          <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
       </View>
     );
-  }
+  };
 
   const profileImage = user.photoURL
     ? { uri: user.photoURL }
@@ -82,107 +143,196 @@ function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.pageTitle}>Mon Profil</Text>
-      </View>
-
-      <ScrollView style={styles.scrollViewContent} showsVerticalScrollIndicator={false}>
-        {/* Profile Info Card */}
-        <View style={styles.profileInfoCard}>
-          <View style={styles.avatarContainer}>
-            <Image
-              source={profileImage}
-              style={styles.avatar}
-              onError={(e) => console.log('Image loading error:', e.nativeEvent.error)}
-            />
-            <TouchableOpacity style={styles.editAvatarButton}>
-              <Icon name="camera-outline" size={18} color={Colors.text.inverse} />
-            </TouchableOpacity>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary.main]}
+            tintColor={Colors.primary.main}
+          />
+        }
+      >
+        {/* Header with Gradient and Profile */}
+        <LinearGradient
+          colors={['#0D9488', '#14B8A6', '#2DD4BF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <View style={styles.headerTop}>
+            <Text style={styles.headerTitle}>Profile</Text>
+            <View style={styles.headerSpacer} />
           </View>
-          <Text style={styles.userName}>{user.displayName || 'Utilisateur'}</Text>
-          <Text style={styles.userEmail}>{user.email}</Text>
-          <TouchableOpacity style={styles.editProfileButton} onPress={() => navigateTo('EditProfile')}>
-            <Text style={styles.editProfileButtonText}>Modifier le profil</Text>
-            <Icon name="chevron-right" size={20} color={Colors.primary.main} />
-          </TouchableOpacity>
+
+          {/* Profile Section */}
+          <View style={styles.profileSection}>
+            <View style={styles.avatarContainer}>
+              <Image source={profileImage} style={styles.avatar} />
+              <TouchableOpacity
+                style={styles.editAvatarButton}
+                onPress={handleEditAvatar}
+                activeOpacity={0.8}
+              >
+                <Icon name="camera" size={14} color={Colors.text.inverse} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>{user.displayName || 'User'}</Text>
+              <Text style={styles.userEmail}>{user.email}</Text>
+
+              <TouchableOpacity
+                style={styles.editProfileButton}
+                onPress={handleEditProfile}
+                activeOpacity={0.7}
+              >
+                <Icon name="pencil" size={14} color={Colors.primary.main} />
+                <Text style={styles.editProfileText}>Edit Profile</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Stats Card */}
+        <View style={styles.statsCard}>
+          <View style={styles.statItem}>
+            <Icon name="swap-horizontal" size={24} color={Colors.primary.main} />
+            <Text style={styles.statValue}>{stats.transactions}</Text>
+            <Text style={styles.statLabel}>Transactions</Text>
+          </View>
+
+          <View style={styles.statDivider} />
+
+          <View style={styles.statItem}>
+            <Icon name="chart-pie" size={24} color={Colors.success} />
+            <Text style={styles.statValue}>{stats.budgets}</Text>
+            <Text style={styles.statLabel}>Budgets</Text>
+          </View>
+
+          <View style={styles.statDivider} />
+
+          <View style={styles.statItem}>
+            <Icon name="bank" size={24} color={Colors.info} />
+            <Text style={styles.statValue}>{stats.accounts}</Text>
+            <Text style={styles.statLabel}>Accounts</Text>
+          </View>
         </View>
 
-        {/* Account Settings Section */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Paramètres de compte</Text>
-          <TouchableOpacity style={styles.optionItem} onPress={() => navigateTo('NotificationsSettings')}>
-            <View style={[styles.optionIconContainer, { backgroundColor: `${Colors.primary.main}15` }]}>
-              <Icon name="bell-outline" size={22} color={Colors.primary.main} />
-            </View>
-            <Text style={styles.optionText}>Notifications</Text>
-            <Icon name="chevron-right" size={20} color={Colors.neutral[400]} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.optionItem} onPress={() => navigateTo('CurrencySettings')}>
-            <View style={[styles.optionIconContainer, { backgroundColor: `${Colors.success}15` }]}>
-              <Icon name="currency-usd" size={22} color={Colors.success} />
-            </View>
-            <Text style={styles.optionText}>Devise</Text>
-            <Icon name="chevron-right" size={20} color={Colors.neutral[400]} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.optionItem, styles.optionItemLast]} onPress={() => navigateTo('ThemeSettings')}>
-            <View style={[styles.optionIconContainer, { backgroundColor: `${Colors.warning}15` }]}>
-              <Icon name="palette-outline" size={22} color={Colors.warning} />
-            </View>
-            <Text style={styles.optionText}>Thème</Text>
-            <Icon name="chevron-right" size={20} color={Colors.neutral[400]} />
-          </TouchableOpacity>
+        {/* Account Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account Settings</Text>
+
+          <View style={styles.menuCard}>
+            <MenuItem
+              icon="cog-outline"
+              label="General Settings"
+              color={Colors.primary.main}
+              onPress={() => navigateTo('Settings')}
+            />
+            <MenuItem
+              icon="bell-outline"
+              label="Notifications"
+              color={Colors.warning}
+              onPress={() => navigateTo('Notifications')}
+            />
+            <MenuItem
+              icon="shield-lock-outline"
+              label="Security & Privacy"
+              color={Colors.error}
+              onPress={() => navigateTo('Security')}
+              showDivider={false}
+            />
+          </View>
         </View>
 
-        {/* Security Section */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Sécurité</Text>
-          <TouchableOpacity style={styles.optionItem} onPress={() => navigateTo('ChangePassword')}>
-            <View style={[styles.optionIconContainer, { backgroundColor: `${Colors.error}15` }]}>
-              <Icon name="lock-outline" size={22} color={Colors.error} />
-            </View>
-            <Text style={styles.optionText}>Changer le mot de passe</Text>
-            <Icon name="chevron-right" size={20} color={Colors.neutral[400]} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.optionItem, styles.optionItemLast]} onPress={() => navigateTo('TwoFactorAuth')}>
-            <View style={[styles.optionIconContainer, { backgroundColor: `${Colors.primary.main}15` }]}>
-              <Icon name="shield-lock-outline" size={22} color={Colors.primary.main} />
-            </View>
-            <Text style={styles.optionText}>Authentification à deux facteurs</Text>
-            <Icon name="chevron-right" size={20} color={Colors.neutral[400]} />
-          </TouchableOpacity>
+        {/* Preferences */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Preferences</Text>
+
+          <View style={styles.menuCard}>
+            <MenuItem
+              icon="currency-usd"
+              label="Currency & Language"
+              color={Colors.success}
+              onPress={() => navigateTo('Currency')}
+            />
+            <MenuItem
+              icon="palette-outline"
+              label="Appearance"
+              color={Colors.info}
+              onPress={() => navigateTo('Appearance')}
+            />
+            <MenuItem
+              icon="database-outline"
+              label="Data & Storage"
+              color={Colors.neutral[600]}
+              onPress={() => navigateTo('Data')}
+              showDivider={false}
+            />
+          </View>
         </View>
 
-        {/* Help & Support Section */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Aide & Support</Text>
-          <TouchableOpacity style={styles.optionItem} onPress={() => navigateTo('FAQ')}>
-            <View style={[styles.optionIconContainer, { backgroundColor: `${Colors.primary.light}15` }]}>
-              <Icon name="help-circle-outline" size={22} color={Colors.primary.light} />
-            </View>
-            <Text style={styles.optionText}>FAQ</Text>
-            <Icon name="chevron-right" size={20} color={Colors.neutral[400]} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.optionItem, styles.optionItemLast]} onPress={() => navigateTo('ContactSupport')}>
-            <View style={[styles.optionIconContainer, { backgroundColor: `${Colors.primary.main}15` }]}>
-              <Icon name="lifebuoy" size={22} color={Colors.primary.main} />
-            </View>
-            <Text style={styles.optionText}>Contacter le support</Text>
-            <Icon name="chevron-right" size={20} color={Colors.neutral[400]} />
-          </TouchableOpacity>
+        {/* Help & Support */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Help & Support</Text>
+
+          <View style={styles.menuCard}>
+            <MenuItem
+              icon="help-circle-outline"
+              label="FAQ"
+              color={Colors.info}
+              onPress={() => Alert.alert('FAQ', 'This feature will be available soon.')}
+            />
+            <MenuItem
+              icon="lifebuoy"
+              label="Contact Support"
+              color={Colors.primary.main}
+              onPress={() =>
+                Alert.alert('Support', 'Contact us at support@spendsmart.app')
+              }
+            />
+            <MenuItem
+              icon="information-outline"
+              label="About SpendSmart"
+              color={Colors.neutral[600]}
+              onPress={() => Alert.alert('SpendSmart', 'Version 1.0.0\n\nA modern expense tracking app.')}
+              showDivider={false}
+            />
+          </View>
         </View>
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Icon name="logout" size={22} color={Colors.text.inverse} style={styles.logoutIcon} />
-          <Text style={styles.logoutButtonText}>Se déconnecter</Text>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleLogout}
+          activeOpacity={0.8}
+        >
+          <Icon name="logout" size={20} color={Colors.error} />
+          <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 
-        <View style={{ height: 50 }} />
+        {/* Bottom Spacer for Floating Tab Bar */}
+        <View style={styles.bottomSpacer} />
       </ScrollView>
     </View>
   );
 }
+
+// Menu Item Component
+const MenuItem = ({ icon, label, color, onPress, showDivider = true }) => (
+  <>
+    <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
+      <View style={[styles.menuIconContainer, { backgroundColor: `${color}15` }]}>
+        <Icon name={icon} size={22} color={color} />
+      </View>
+      <Text style={styles.menuLabel}>{label}</Text>
+      <Icon name="chevron-right" size={20} color={Colors.text.tertiary} />
+    </TouchableOpacity>
+    {showDivider && <View style={styles.menuDivider} />}
+  </>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -194,119 +344,165 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: Colors.background.secondary,
+    paddingHorizontal: Spacing.lg,
   },
   emptyText: {
-    ...Typography.body,
-    marginTop: Spacing.sm,
+    fontSize: 16,
     color: Colors.text.secondary,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   loginButton: {
-    marginTop: Spacing.lg,
     backgroundColor: Colors.primary.main,
     paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     borderRadius: Radius.sm,
+    ...Shadows.sm,
   },
   loginButtonText: {
-    ...Typography.button,
+    fontSize: 16,
+    fontWeight: '700',
     color: Colors.text.inverse,
   },
   header: {
-    backgroundColor: Colors.background.primary,
-    paddingTop: Spacing.xl + Spacing.lg,
+    paddingTop: Platform.OS === 'ios' ? Spacing.xxl + Spacing.md : Spacing.lg,
     paddingBottom: Spacing.lg,
     paddingHorizontal: Spacing.md,
+  },
+  headerTop: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.md,
   },
-  pageTitle: {
-    ...Typography.h2,
-    color: Colors.text.primary,
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
-  scrollViewContent: {
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: Colors.text.inverse,
     flex: 1,
+    textAlign: 'left',
   },
-  profileInfoCard: {
-    backgroundColor: Colors.background.card,
-    borderRadius: Radius.lg,
-    marginHorizontal: Spacing.md,
-    marginTop: Spacing.lg,
-    padding: Spacing.lg,
+  headerSpacer: {
+    width: 40,
+  },
+  profileSection: {
+    flexDirection: 'row',
     alignItems: 'center',
-    ...Shadows.sm,
   },
   avatarContainer: {
     position: 'relative',
-    marginBottom: Spacing.md,
+    marginRight: Spacing.md,
   },
   avatar: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     borderRadius: Radius.full,
     borderWidth: 3,
-    borderColor: Colors.primary.main,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   editAvatarButton: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: Colors.primary.main,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    width: 28,
+    height: 28,
     borderRadius: Radius.full,
-    padding: Spacing.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 2,
-    borderColor: Colors.background.card,
+    borderColor: Colors.primary.main,
+  },
+  userInfo: {
+    flex: 1,
   },
   userName: {
-    ...Typography.h3,
-    color: Colors.text.primary,
-    marginBottom: Spacing.xs,
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.text.inverse,
+    marginBottom: 2,
   },
   userEmail: {
-    ...Typography.body,
-    color: Colors.text.secondary,
-    marginBottom: Spacing.md,
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: Spacing.sm,
   },
   editProfileButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primary.subtle,
-    paddingVertical: Spacing.sm + 2,
-    paddingHorizontal: Spacing.md,
-    borderRadius: Radius.sm,
-    marginTop: Spacing.sm,
-    justifyContent: 'space-between',
-    width: '100%',
+    gap: Spacing.xs,
+    alignSelf: 'flex-start',
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    backgroundColor: Colors.background.card,
+    borderRadius: Radius.xs,
   },
-  editProfileButtonText: {
-    ...Typography.bodyBold,
+  editProfileText: {
+    fontSize: 12,
+    fontWeight: '600',
     color: Colors.primary.main,
   },
-  sectionCard: {
+  statsCard: {
+    flexDirection: 'row',
     backgroundColor: Colors.background.card,
-    borderRadius: Radius.lg,
     marginHorizontal: Spacing.md,
-    marginTop: Spacing.lg,
+    marginTop: Spacing.md,
+    borderRadius: Radius.md,
     padding: Spacing.md,
     ...Shadows.sm,
   },
-  sectionTitle: {
-    ...Typography.h3,
-    color: Colors.text.primary,
-    marginBottom: Spacing.sm,
-    paddingBottom: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
   },
-  optionItem: {
+  statValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.text.primary,
+    marginTop: Spacing.xs,
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: Colors.text.secondary,
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: Colors.border.light,
+  },
+  section: {
+    marginTop: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.text.secondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: Spacing.sm,
+  },
+  menuCard: {
+    backgroundColor: Colors.background.card,
+    borderRadius: Radius.md,
+    ...Shadows.sm,
+  },
+  menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
+    paddingHorizontal: Spacing.md,
   },
-  optionItemLast: {
-    borderBottomWidth: 0,
-  },
-  optionIconContainer: {
+  menuIconContainer: {
     width: 40,
     height: 40,
     borderRadius: Radius.sm,
@@ -314,28 +510,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: Spacing.md,
   },
-  optionText: {
-    ...Typography.body,
+  menuLabel: {
     flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
     color: Colors.text.primary,
   },
+  menuDivider: {
+    height: 1,
+    backgroundColor: Colors.border.light,
+    marginLeft: 68,
+  },
   logoutButton: {
-    backgroundColor: Colors.error,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.sm,
+    gap: Spacing.sm,
+    backgroundColor: Colors.background.card,
     marginHorizontal: Spacing.md,
     marginTop: Spacing.lg,
-    ...Shadows.sm,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.md,
+    borderWidth: 1.5,
+    borderColor: Colors.error,
   },
-  logoutIcon: {
-    marginRight: Spacing.sm,
+  logoutText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.error,
   },
-  logoutButtonText: {
-    ...Typography.button,
-    color: Colors.text.inverse,
+  bottomSpacer: {
+    height: 120, // Space for floating tab bar
   },
 });
 

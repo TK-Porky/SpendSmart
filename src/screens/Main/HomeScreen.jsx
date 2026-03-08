@@ -6,20 +6,20 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  FlatList
+  Alert,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 
 import { HomeScreenStyles } from './HomeScreenStyle';
 import UserHeader from '../../components/UserHeader';
-import BalanceCard from '../../components/BalanceCard';
+import CreditCard from '../../components/CreditCard';
+import QuickActions from '../../components/QuickActions';
 import TransactionCard from '../../components/TransactionCard';
 import { SkeletonCard, SkeletonList, EmptyState, EmptyStatePresets } from '../../components';
 import { Colors } from '../../constants';
 
 import { balanceService } from '../../services/BalanceService';
 import { transactionService } from '../../services/TransactionService';
-import { categoryService } from '../../services/CategoryService';
 import BalanceSummary from '../../models/BalanceSummary';
 
 function HomeScreen({ navigation }) {
@@ -31,17 +31,10 @@ function HomeScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [balanceData, setBalanceData] = useState({
-    balance: 0,
-    income: 0,
-    expenses: 0,
-    currency: 'XOF',
-  });
-
 
   useEffect(() => {
     if (!user) return;
-    
+
     const userUid = user.uid;
 
     setUserProfile({ photoURL: user.photoURL });
@@ -52,7 +45,8 @@ function HomeScreen({ navigation }) {
     });
 
     const unsubscribeTransactions = transactionService.listenToTransactions(userUid, (txs) => {
-      setRecentTransactions(txs);
+      // Limit to 5 most recent transactions for home screen
+      setRecentTransactions(txs.slice(0, 5));
       setLoading(false);
       setLoadingTransactions(false);
     });
@@ -64,29 +58,28 @@ function HomeScreen({ navigation }) {
   }, [user]);
 
   const handleNavigateToProfile = () => {
-    navigation.navigate('Profile')
+    navigation.navigate('Profile');
   };
 
   const handleNotificationPress = () => {
-    console.log('Notifications pressées');
+    navigation.navigate('Notifications');
   };
 
   const handleSettingsPress = () => {
     console.log('Paramètres pressés');
-    navigation.navigate('Paramètres');
+    navigation.navigate('Profile', { screen: 'Settings' });
   };
 
   const handleViewAllTransactions = () => {
-    console.log("Naviguer vers l'écran de toutes les transactions");
-    navigation.navigate('Transactions'); // Nom de votre Tab.Screen pour les transactions
+    navigation.navigate('Transactions');
   };
 
   const handleSelectTransaction = (transaction) => {
-    console.log("Transaction sélectionnée:", transaction);
-    navigation.navigate('Transactions', {
-      screen: 'TransactionDetail',
-      params: { transactionId: transaction.id },
-    });
+    navigation.navigate('TransactionDetail', { transactionId: transaction.id });
+  };
+
+  const handleCardPress = () => {
+    navigation.navigate('AccountDetail');
   };
 
   const onRefresh = useCallback(() => {
@@ -102,64 +95,92 @@ function HomeScreen({ navigation }) {
     });
   };
 
+  // Quick Actions
+  const handleSend = () => {
+    Alert.alert('Send Money', 'Send money feature coming soon!');
+  };
+
+  const handleReceive = () => {
+    Alert.alert('Receive Money', 'Receive money feature coming soon!');
+  };
+
+  const handlePay = () => {
+    Alert.alert('Pay Bills', 'Pay bills feature coming soon!');
+  };
+
+  const handleMore = () => {
+    navigation.navigate('Profile', { screen: 'Settings' });
+  };
+
   const userCurrency = balanceSummary ? balanceSummary.currency || 'XOF' : 'XOF';
 
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      style={HomeScreenStyles.container}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={[Colors.primary.main]}
-          tintColor={Colors.primary.main}
-        />
-      }
-    >
-      <View style={HomeScreenStyles.heroHeader}>
-        <UserHeader
-          userProfile={userProfile}
-          userDisplayName={userDisplayName}
-          onNavigateToProfile={handleNavigateToProfile}
-          onNotificationPress={handleNotificationPress}
-          onSettingsPress={handleSettingsPress}
-        />
+    <View style={HomeScreenStyles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary.main]}
+            tintColor={Colors.primary.main}
+          />
+        }
+      >
+        {/* User Header */}
+        <View style={HomeScreenStyles.headerSection}>
+          <UserHeader
+            userProfile={userProfile}
+            userDisplayName={userDisplayName}
+            onNavigateToProfile={handleNavigateToProfile}
+            onNotificationPress={handleNotificationPress}
+          />
+        </View>
 
+        {/* Credit Card */}
         {loading ? (
-          <SkeletonCard variant="balance" style={{ marginHorizontal: 0 }} />
+          <SkeletonCard variant="balance" style={{ marginHorizontal: 16 }} />
         ) : (
-          <BalanceCard
+          <CreditCard
             balance={balanceSummary.currentBalance}
-            income={balanceSummary.totalIncome}
-            expenses={balanceSummary.totalExpenses}
+            cardNumber="1234 5678 9012 4862"
+            cardHolder={userDisplayName}
+            expiryDate="12/26"
             currency={userCurrency}
+            cardType="visa"
+            onPress={handleCardPress}
           />
         )}
 
-        {/* Section des transactions récentes */}
+        {/* Quick Actions */}
+        <QuickActions
+          onSend={handleSend}
+          onReceive={handleReceive}
+          onPay={handlePay}
+          onMore={handleMore}
+        />
+
+        {/* Recent Transactions */}
         <View style={HomeScreenStyles.transactionsSection}>
-          <View style={HomeScreenStyles.listHeader}>
-            <Text style={HomeScreenStyles.listTitle}>Transactions Récentes</Text>
+          <View style={HomeScreenStyles.sectionHeader}>
+            <Text style={HomeScreenStyles.sectionTitle}>Recent Transactions</Text>
             <TouchableOpacity onPress={handleViewAllTransactions}>
-              <Text style={HomeScreenStyles.viewAllButton}>Tout voir</Text>
+              <Text style={HomeScreenStyles.seeAllButton}>See All</Text>
             </TouchableOpacity>
           </View>
 
           {loadingTransactions ? (
-            <SkeletonList count={5} variant="transaction" />
+            <SkeletonList count={3} variant="transaction" />
           ) : recentTransactions.length > 0 ? (
-            <FlatList
-              data={recentTransactions}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
+            <View style={HomeScreenStyles.transactionsList}>
+              {recentTransactions.map((item) => (
                 <TransactionCard
+                  key={item.id}
                   transaction={item}
                   onPress={handleSelectTransaction}
                 />
-              )}
-              scrollEnabled={false}
-            />
+              ))}
+            </View>
           ) : (
             <EmptyState
               {...EmptyStatePresets.transactions}
@@ -168,9 +189,8 @@ function HomeScreen({ navigation }) {
             />
           )}
         </View>
-
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 

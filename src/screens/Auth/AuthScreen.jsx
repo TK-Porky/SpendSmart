@@ -1,3 +1,8 @@
+/**
+ * AuthScreen
+ * Modern authentication with login and signup
+ * @module screens/Auth/AuthScreen
+ */
 import React, { useState } from 'react';
 import {
   View,
@@ -6,17 +11,17 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import { LoadingSpinner } from '../../components';
+import { Colors } from '../../constants';
 import { authService } from '../../services/AuthService';
 import { styles } from './AuthScreenStyle';
 
-const AuthScreen = ({ navigation }) => {
+function AuthScreen({ navigation }) {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
@@ -51,26 +56,26 @@ const AuthScreen = ({ navigation }) => {
     const newErrors = {};
 
     if (!formData.email) {
-      newErrors.email = 'L\'email est requis';
+      newErrors.email = 'Email is required';
     } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Adresse email invalide';
+      newErrors.email = 'Invalid email address';
     }
 
     if (!formData.password) {
-      newErrors.password = 'Le mot de passe est requis';
+      newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+      newErrors.password = 'Password must be at least 6 characters';
     }
 
     if (!isLogin) {
       if (!formData.username || formData.username.trim().length < 4) {
-        newErrors.username = 'Le nom d\'utilisateur doit au moins avoir 4 caractères';
+        newErrors.username = 'Username must be at least 4 characters';
       }
 
       if (!formData.confirmPassword) {
-        newErrors.confirmPassword = 'La confirmation du mot de passe est requise';
+        newErrors.confirmPassword = 'Password confirmation is required';
       } else if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
+        newErrors.confirmPassword = 'Passwords do not match';
       }
     }
 
@@ -88,9 +93,9 @@ const AuthScreen = ({ navigation }) => {
         const result = await authService.signIn(formData.email, formData.password);
 
         if (result.success) {
-          Alert.alert('Succès', 'Connexion réussie !');
+          Alert.alert('Success', 'Login successful!');
         } else {
-          Alert.alert('Erreur de connexion', result.errors?.join('\n') || 'Identifiants incorrects');
+          Alert.alert('Login Error', result.errors?.join('\n') || 'Invalid credentials');
         }
       } else {
         const userData = {
@@ -103,8 +108,8 @@ const AuthScreen = ({ navigation }) => {
 
         if (result.success) {
           Alert.alert(
-            'Inscription réussie !',
-            result.message || 'Votre compte a été créé avec succès. Veuillez vérifier votre email.',
+            'Registration Successful!',
+            result.message || 'Your account has been created. Please verify your email.',
             [
               {
                 text: 'OK',
@@ -121,12 +126,12 @@ const AuthScreen = ({ navigation }) => {
             ]
           );
         } else {
-          Alert.alert('Erreur d\'inscription', result.errors?.join('\n') || 'Une erreur est survenue');
+          Alert.alert('Registration Error', result.errors?.join('\n') || 'An error occurred');
         }
       }
     } catch (error) {
-      console.error('Erreur authentification:', error);
-      Alert.alert('Erreur', 'Une erreur inattendue est survenue. Veuillez réessayer.');
+      console.error('Authentication error:', error);
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -134,12 +139,12 @@ const AuthScreen = ({ navigation }) => {
 
   const handleForgotPassword = async () => {
     if (!formData.email) {
-      Alert.alert('Email requis', 'Veuillez entrer votre adresse email d\'abord');
+      Alert.alert('Email Required', 'Please enter your email address first');
       return;
     }
 
     if (!validateEmail(formData.email)) {
-      Alert.alert('Email invalide', 'Veuillez entrer une adresse email valide');
+      Alert.alert('Invalid Email', 'Please enter a valid email address');
       return;
     }
 
@@ -149,17 +154,21 @@ const AuthScreen = ({ navigation }) => {
 
       if (result.success) {
         Alert.alert(
-          'Email envoyé',
-          'Un lien de réinitialisation a été envoyé à votre adresse email'
+          'Email Sent',
+          'A password reset link has been sent to your email address'
         );
       } else {
-        Alert.alert('Erreur', result.error || 'Impossible d\'envoyer l\'email de réinitialisation');
+        Alert.alert('Error', result.error || 'Unable to send reset email');
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Une erreur est survenue lors de l\'envoi de l\'email');
+      Alert.alert('Error', 'An error occurred while sending the email');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSocialLogin = (provider) => {
+    Alert.alert('Coming Soon', `${provider} login will be available soon.`);
   };
 
   const getInputStyle = (fieldName) => [
@@ -167,197 +176,248 @@ const AuthScreen = ({ navigation }) => {
     errors[fieldName] && styles.inputError
   ];
 
-  const getPasswordInputStyle = (fieldName) => [
-    styles.passwordInput,
+  const getPasswordContainerStyle = (fieldName) => [
+    styles.passwordContainer,
     errors[fieldName] && styles.inputError
   ];
 
   return (
     <KeyboardAvoidingView
-      style={styles.fullScreenContainer} // Nouveau conteneur global
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* Header avec dégradé */}
+        {/* Header with Gradient */}
         <LinearGradient
-          colors={['#6A1B9A', '#4A148C']} // Dégradé violet
+          colors={['#0D9488', '#14B8A6', '#2DD4BF']}
           start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.headerBackground}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
         >
-          {/* Logo SpendSmart */}
-          <Text style={styles.logo}>SpendSmart</Text>
-          <Text style={styles.subtitle}>
-            {isLogin ? 'Bon retour parmi nous !' : 'Créez votre compte'}
-          </Text>
-
-          {/* Toggle Buttons (Connexion / Inscription) */}
-          <View style={styles.toggleContainer}>
-            <TouchableOpacity
-              style={[styles.toggleButton, isLogin && styles.activeToggle]}
-              onPress={() => setIsLogin(true)}
-            >
-              <LinearGradient
-                colors={isLogin ? ['#FF4081', '#E00040'] : ['transparent', 'transparent']} // Dégradé rose/violet pour actif
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.toggleButtonInner}
-              >
-                <Text style={[styles.toggleText, isLogin && styles.activeToggleText]}>
-                  Connexion
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.toggleButton, !isLogin && styles.activeToggle]}
-              onPress={() => setIsLogin(false)}
-            >
-              <LinearGradient
-                colors={!isLogin ? ['#FF4081', '#E00040'] : ['transparent', 'transparent']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.toggleButtonInner}
-              >
-                <Text style={[styles.toggleText, !isLogin && styles.activeToggleText]}>
-                  Inscription
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
+          <View style={styles.logoContainer}>
+            <Text style={styles.appName}>SpendSmart</Text>
+            <Text style={styles.tagline}>
+              {isLogin ? 'Welcome back!' : 'Start your financial journey'}
+            </Text>
           </View>
         </LinearGradient>
 
-        {/* Formulaire principal */}
-        <View style={styles.formContainer}>
-          {/* Registration Fields */}
-          {!isLogin && (
-            <>
+        {/* Form Card */}
+        <View style={styles.formCard}>
+          {/* Tab Selector */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, isLogin && styles.activeTab]}
+              onPress={() => setIsLogin(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.tabText, isLogin && styles.activeTabText]}>
+                Login
+              </Text>
+              {isLogin && <View style={styles.tabIndicator} />}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tab, !isLogin && styles.activeTab]}
+              onPress={() => setIsLogin(false)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.tabText, !isLogin && styles.activeTabText]}>
+                Sign Up
+              </Text>
+              {!isLogin && <View style={styles.tabIndicator} />}
+            </TouchableOpacity>
+          </View>
+
+          {/* Form Fields */}
+          <View style={styles.formContent}>
+            {/* Username Field (Sign Up Only) */}
+            {!isLogin && (
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Nom d'utilisateur *</Text>
-                <TextInput
-                  style={getInputStyle('firstName')}
-                  value={formData.username}
-                  onChangeText={value => handleInputChange('username', value)}
-                  placeholder="Bille"
-                  placeholderTextColor="#999"
-                  autoCapitalize="words"
-                  keyboardType='default'
-                />
+                <Text style={styles.label}>Username</Text>
+                <View style={getInputStyle('username')}>
+                  <Icon name="account-outline" size={20} color={Colors.text.tertiary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.textInput}
+                    value={formData.username}
+                    onChangeText={value => handleInputChange('username', value)}
+                    placeholder="Enter your username"
+                    placeholderTextColor={Colors.text.tertiary}
+                    autoCapitalize="words"
+                  />
+                </View>
                 {errors.username && <Text style={styles.errorText}>{errors.username}</Text>}
               </View>
-            </>
-          )}
+            )}
 
-          {/* Email Field */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Adresse E-mail *</Text>
-            <TextInput
-              style={getInputStyle('email')}
-              value={formData.email}
-              onChangeText={value => handleInputChange('email', value)}
-              placeholder="Entrer votre adresse e-mail"
-              placeholderTextColor="#999"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-          </View>
-
-          {/* Password Field */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Mot de passe *</Text>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={getPasswordInputStyle('password')}
-                value={formData.password}
-                onChangeText={value => handleInputChange('password', value)}
-                placeholder="Entrer votre mot de passe"
-                placeholderTextColor="#999"
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity
-                style={styles.eyeButton}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Icon name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#999" />
-              </TouchableOpacity>
-            </View>
-            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
-          </View>
-
-          {/* Confirm Password Field */}
-          {!isLogin && (
+            {/* Email Field */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Confirmer le mot de passe *</Text>
-              <View style={styles.passwordContainer}>
+              <Text style={styles.label}>Email Address</Text>
+              <View style={getInputStyle('email')}>
+                <Icon name="email-outline" size={20} color={Colors.text.tertiary} style={styles.inputIcon} />
                 <TextInput
-                  style={getPasswordInputStyle('confirmPassword')}
-                  value={formData.confirmPassword}
-                  onChangeText={value =>
-                    handleInputChange('confirmPassword', value)
-                  }
-                  placeholder="Confirmer votre mot de passe"
-                  placeholderTextColor="#999"
-                  secureTextEntry={!showConfirmPassword}
+                  style={styles.textInput}
+                  value={formData.email}
+                  onChangeText={value => handleInputChange('email', value)}
+                  placeholder="Enter your email"
+                  placeholderTextColor={Colors.text.tertiary}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+              {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+            </View>
+
+            {/* Password Field */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Password</Text>
+              <View style={getPasswordContainerStyle('password')}>
+                <Icon name="lock-outline" size={20} color={Colors.text.tertiary} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.textInput}
+                  value={formData.password}
+                  onChangeText={value => handleInputChange('password', value)}
+                  placeholder="Enter your password"
+                  placeholderTextColor={Colors.text.tertiary}
+                  secureTextEntry={!showPassword}
                 />
                 <TouchableOpacity
                   style={styles.eyeButton}
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  onPress={() => setShowPassword(!showPassword)}
+                  activeOpacity={0.7}
                 >
-                  <Icon name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color="#999" />
+                  <Icon
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color={Colors.text.tertiary}
+                  />
                 </TouchableOpacity>
               </View>
-              {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
+              {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             </View>
-          )}
 
-          {/* Forgot Password */}
-          {isLogin && (
+            {/* Confirm Password Field (Sign Up Only) */}
+            {!isLogin && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Confirm Password</Text>
+                <View style={getPasswordContainerStyle('confirmPassword')}>
+                  <Icon name="lock-check-outline" size={20} color={Colors.text.tertiary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.textInput}
+                    value={formData.confirmPassword}
+                    onChangeText={value => handleInputChange('confirmPassword', value)}
+                    placeholder="Confirm your password"
+                    placeholderTextColor={Colors.text.tertiary}
+                    secureTextEntry={!showConfirmPassword}
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeButton}
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    activeOpacity={0.7}
+                  >
+                    <Icon
+                      name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color={Colors.text.tertiary}
+                    />
+                  </TouchableOpacity>
+                </View>
+                {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
+              </View>
+            )}
+
+            {/* Forgot Password Link (Login Only) */}
+            {isLogin && (
+              <TouchableOpacity
+                style={styles.forgotPasswordButton}
+                onPress={handleForgotPassword}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Submit Button */}
             <TouchableOpacity
-              style={styles.forgotPasswordButton}
-              onPress={handleForgotPassword}
+              style={[styles.submitButton, isLoading && styles.disabledButton]}
+              onPress={handleSubmit}
+              disabled={isLoading}
+              activeOpacity={0.9}
             >
-              <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
+              <LinearGradient
+                colors={isLoading ? ['#94A3B8', '#94A3B8'] : ['#0D9488', '#14B8A6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.submitButtonGradient}
+              >
+                {isLoading ? (
+                  <LoadingSpinner size="small" color={Colors.text.inverse} />
+                ) : (
+                  <>
+                    <Text style={styles.submitButtonText}>
+                      {isLogin ? 'Login' : 'Create Account'}
+                    </Text>
+                    <Icon name="arrow-right" size={20} color={Colors.text.inverse} />
+                  </>
+                )}
+              </LinearGradient>
             </TouchableOpacity>
-          )}
 
-          {/* Submit Button */}
-          <TouchableOpacity
-            style={[styles.submitButton, isLoading && styles.disabledButton]}
-            onPress={handleSubmit}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.submitButtonText}>
-                {isLogin ? 'Se connecter' : "S'inscrire"}
+            {/* Divider */}
+            <View style={styles.dividerContainer}>
+              <View style={styles.divider} />
+              <Text style={styles.dividerText}>or continue with</Text>
+              <View style={styles.divider} />
+            </View>
+
+            {/* Social Login Buttons */}
+            <View style={styles.socialButtonsContainer}>
+              <TouchableOpacity
+                style={styles.socialButton}
+                onPress={() => handleSocialLogin('Google')}
+                activeOpacity={0.7}
+              >
+                <Icon name="google" size={24} color="#EA4335" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.socialButton}
+                onPress={() => handleSocialLogin('Apple')}
+                activeOpacity={0.7}
+              >
+                <Icon name="apple" size={24} color={Colors.text.primary} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.socialButton}
+                onPress={() => handleSocialLogin('Facebook')}
+                activeOpacity={0.7}
+              >
+                <Icon name="facebook" size={24} color="#1877F2" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Terms and Privacy (Sign Up Only) */}
+            {!isLogin && (
+              <Text style={styles.termsText}>
+                By signing up, you agree to our{' '}
+                <Text style={styles.termsLink}>Terms of Service</Text>
+                {' '}and{' '}
+                <Text style={styles.termsLink}>Privacy Policy</Text>
               </Text>
             )}
-          </TouchableOpacity>
-
-          {/* Alternative Auth Methods */}
-          <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>ou</Text>
-            <View style={styles.divider} />
           </View>
-
-          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Fonctionnalité', 'Connexion Google à implémenter')}>
-            <Icon name="google" size={20} color="#333" style={styles.socialIcon} />
-            <Text style={styles.socialButtonText}>Se connecter avec Google</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.socialButton} onPress={() => Alert.alert('Fonctionnalité', 'Connexion SMS à implémenter')}>
-            <Icon name="email-outline" size={20} color="#333" style={styles.socialIcon} />
-            <Text style={styles.socialButtonText}>Se connecter avec un SMS</Text>
-          </TouchableOpacity>
         </View>
+
+        {/* Bottom Spacer */}
+        <View style={styles.bottomSpacer} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
-};
+}
 
 export default AuthScreen;

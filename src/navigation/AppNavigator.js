@@ -1,11 +1,11 @@
 /* eslint-disable react/no-unstable-nested-components */
 /**
  * App Navigator
- * Main navigation configuration with bottom tabs and stack navigators
+ * Modern navigation with floating bottom tab bar
  * @module navigation/AppNavigator
  */
 import React from 'react';
-import { View, TouchableOpacity, Alert, StyleSheet, Text, Platform } from 'react-native';
+import { View, TouchableOpacity, Alert, StyleSheet, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
@@ -19,25 +19,17 @@ import TransactionsScreen from '../screens/Main/TransactionsScreen';
 import BudgetsScreen from '../screens/Main/BudgetsScreen';
 import StatisticsScreen from '../screens/Main/StatisticsScreen';
 import ProfileScreen from '../screens/Main/ProfileScreen';
+import NotificationsScreen from '../screens/Main/NotificationsScreen';
 
-// === PLACEHOLDER SCREENS ===
-const AddTransactionScreen = () => (
-  <View style={placeholderStyles.container}>
-    <Text style={placeholderStyles.text}>Page Ajout Transaction</Text>
-  </View>
-);
+// Detail screens
+import TransactionDetailScreen from '../screens/Details/TransactionDetailScreen';
+import AccountScreen from '../screens/Details/AccountScreen';
 
-const AddBudgetScreen = () => (
-  <View style={placeholderStyles.container}>
-    <Text style={placeholderStyles.text}>Page Ajout Budget</Text>
-  </View>
-);
+// Form screens
+import AddTransactionScreen from '../screens/Forms/AddTransactionScreen';
 
-const AddInsightDataScreen = () => (
-  <View style={placeholderStyles.container}>
-    <Text style={placeholderStyles.text}>Page Ajout Donnée Insight</Text>
-  </View>
-);
+// Settings screens
+import SettingsScreen from '../screens/Settings/SettingsScreen';
 
 // === CUSTOM ADD BUTTON ===
 const CustomAddButton = ({ focused }) => {
@@ -50,7 +42,7 @@ const CustomAddButton = ({ focused }) => {
       accessibilityHint="Ouvre le menu d'ajout rapide"
     >
       <View style={[customButtonStyles.button, focused && customButtonStyles.focusedButton]}>
-        <MaterialCommunityIcons name="plus" size={24} color={Colors.text.inverse} />
+        <MaterialCommunityIcons name="plus" size={28} color={Colors.text.inverse} />
       </View>
     </TouchableOpacity>
   );
@@ -101,20 +93,44 @@ const modalStackOptions = {
 // === STACK COMPONENTS ===
 function HomeStackScreen() {
   return (
-    <HomeStack.Navigator screenOptions={defaultStackOptions}>
+    <HomeStack.Navigator
+      screenOptions={defaultStackOptions}
+      screenListeners={({ navigation }) => ({
+        state: (e) => {
+          // Hide tab bar on detail screens
+          const routes = e.data.state.routes;
+          const currentRoute = routes[routes.length - 1];
+
+          if (currentRoute.name !== 'HomeDashboard') {
+            navigation.getParent()?.setOptions({
+              tabBarStyle: { display: 'none' }
+            });
+          } else {
+            navigation.getParent()?.setOptions({
+              tabBarStyle: styles.tabBar
+            });
+          }
+        }
+      })}
+    >
       <HomeStack.Screen
         name="HomeDashboard"
         component={HomeScreen}
       />
       <HomeStack.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ ...defaultStackOptions, title: 'Détails du Compte' }}
+        name="Notifications"
+        component={NotificationsScreen}
+        options={defaultStackOptions}
       />
       <HomeStack.Screen
-        name="AddTransaction"
-        component={AddTransactionScreen}
-        options={{ ...modalStackOptions, title: 'Nouvelle Transaction' }}
+        name="TransactionDetail"
+        component={TransactionDetailScreen}
+        options={defaultStackOptions}
+      />
+      <HomeStack.Screen
+        name="AccountDetail"
+        component={AccountScreen}
+        options={defaultStackOptions}
       />
     </HomeStack.Navigator>
   );
@@ -122,7 +138,25 @@ function HomeStackScreen() {
 
 function TransactionsStackScreen() {
   return (
-    <TransactionsStack.Navigator screenOptions={defaultStackOptions}>
+    <TransactionsStack.Navigator
+      screenOptions={defaultStackOptions}
+      screenListeners={({ navigation }) => ({
+        state: (e) => {
+          const routes = e.data.state.routes;
+          const currentRoute = routes[routes.length - 1];
+
+          if (currentRoute.name !== 'TransactionsList') {
+            navigation.getParent()?.setOptions({
+              tabBarStyle: { display: 'none' }
+            });
+          } else {
+            navigation.getParent()?.setOptions({
+              tabBarStyle: styles.tabBar
+            });
+          }
+        }
+      })}
+    >
       <TransactionsStack.Screen
         name="TransactionsList"
         component={TransactionsScreen}
@@ -130,7 +164,12 @@ function TransactionsStackScreen() {
       <TransactionsStack.Screen
         name="AddTransaction"
         component={AddTransactionScreen}
-        options={{ ...modalStackOptions, title: 'Nouvelle Transaction' }}
+        options={defaultStackOptions}
+      />
+      <TransactionsStack.Screen
+        name="TransactionDetail"
+        component={TransactionDetailScreen}
+        options={defaultStackOptions}
       />
     </TransactionsStack.Navigator>
   );
@@ -138,15 +177,33 @@ function TransactionsStackScreen() {
 
 function BudgetsStackScreen() {
   return (
-    <BudgetsStack.Navigator screenOptions={defaultStackOptions}>
+    <BudgetsStack.Navigator
+      screenOptions={defaultStackOptions}
+      screenListeners={({ navigation }) => ({
+        state: (e) => {
+          const routes = e.data.state.routes;
+          const currentRoute = routes[routes.length - 1];
+
+          if (currentRoute.name !== 'BudgetsList') {
+            navigation.getParent()?.setOptions({
+              tabBarStyle: { display: 'none' }
+            });
+          } else {
+            navigation.getParent()?.setOptions({
+              tabBarStyle: styles.tabBar
+            });
+          }
+        }
+      })}
+    >
       <BudgetsStack.Screen
         name="BudgetsList"
         component={BudgetsScreen}
       />
       <BudgetsStack.Screen
-        name="AddBudget"
-        component={AddBudgetScreen}
-        options={{ ...modalStackOptions, title: 'Nouveau Budget' }}
+        name="AccountDetail"
+        component={AccountScreen}
+        options={defaultStackOptions}
       />
     </BudgetsStack.Navigator>
   );
@@ -159,21 +216,39 @@ function InsightStackScreen() {
         name="InsightOverview"
         component={StatisticsScreen}
       />
-      <InsightStack.Screen
-        name="AddInsightData"
-        component={AddInsightDataScreen}
-        options={{ ...modalStackOptions, title: 'Ajouter Données' }}
-      />
     </InsightStack.Navigator>
   );
 }
 
 function ProfileStackScreen() {
   return (
-    <ProfileStack.Navigator screenOptions={defaultStackOptions}>
+    <ProfileStack.Navigator
+      screenOptions={defaultStackOptions}
+      screenListeners={({ navigation }) => ({
+        state: (e) => {
+          const routes = e.data.state.routes;
+          const currentRoute = routes[routes.length - 1];
+
+          if (currentRoute.name !== 'ProfileDetail') {
+            navigation.getParent()?.setOptions({
+              tabBarStyle: { display: 'none' }
+            });
+          } else {
+            navigation.getParent()?.setOptions({
+              tabBarStyle: styles.tabBar
+            });
+          }
+        }
+      })}
+    >
       <ProfileStack.Screen
         name="ProfileDetail"
         component={ProfileScreen}
+      />
+      <ProfileStack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={defaultStackOptions}
       />
     </ProfileStack.Navigator>
   );
@@ -184,12 +259,28 @@ const getTabBarIcon = (routeName, focused) => {
   const iconMap = {
     [TAB_NAMES.HOME]: focused ? 'home' : 'home-outline',
     [TAB_NAMES.TRANSACTIONS]: focused ? 'swap-horizontal' : 'swap-horizontal-outline',
-    [TAB_NAMES.BUDGETS]: focused ? 'cash' : 'cash-outline',
-    [TAB_NAMES.INSIGHT]: focused ? 'stats-chart' : 'stats-chart-outline',
+    [TAB_NAMES.BUDGETS]: focused ? 'wallet' : 'wallet-outline',
+    [TAB_NAMES.INSIGHT]: focused ? 'bar-chart' : 'bar-chart-outline',
     [TAB_NAMES.PROFILE]: focused ? 'person' : 'person-outline'
   };
 
   return iconMap[routeName];
+};
+
+// === CUSTOM TAB BAR ICON ===
+const CustomTabBarIcon = ({ route, focused, color, size }) => {
+  if (route.name === TAB_NAMES.QUICK_ADD) {
+    return <CustomAddButton focused={focused} />;
+  }
+
+  const iconName = getTabBarIcon(route.name, focused);
+
+  return (
+    <View style={styles.iconContainer}>
+      {focused && <View style={styles.activeIndicator} />}
+      <Icon name={iconName} size={size} color={color} />
+    </View>
+  );
 };
 
 // === QUICK ADD HANDLER ===
@@ -200,29 +291,58 @@ const useQuickAddHandler = () => {
     const state = navigation.getState();
     const route = state.routes[state.index];
 
+    // Quick add actions based on current tab
     const quickAddActions = {
       [TAB_NAMES.HOME]: () => {
-        navigation.navigate(TAB_NAMES.HOME, { screen: 'AddTransaction' });
+        navigation.navigate(TAB_NAMES.TRANSACTIONS, {
+          screen: 'AddTransaction',
+        });
       },
       [TAB_NAMES.TRANSACTIONS]: () => {
-        navigation.navigate(TAB_NAMES.TRANSACTIONS, { screen: 'AddTransaction' });
+        navigation.navigate(TAB_NAMES.TRANSACTIONS, {
+          screen: 'AddTransaction',
+        });
       },
       [TAB_NAMES.BUDGETS]: () => {
-        navigation.navigate(TAB_NAMES.BUDGETS, { screen: 'AddBudget' });
+        navigation.navigate(TAB_NAMES.TRANSACTIONS, {
+          screen: 'AddTransaction',
+        });
       },
       [TAB_NAMES.INSIGHT]: () => {
-        navigation.navigate(TAB_NAMES.INSIGHT, { screen: 'AddInsightData' });
+        navigation.navigate(TAB_NAMES.TRANSACTIONS, {
+          screen: 'AddTransaction',
+        });
       },
       [TAB_NAMES.PROFILE]: () => {
-        Alert.alert("Action rapide", "Pas d'action rapide définie pour le profil.");
-      }
+        Alert.alert(
+          'Quick Action',
+          'What would you like to do?',
+          [
+            {
+              text: 'Add Transaction',
+              onPress: () => navigation.navigate(TAB_NAMES.TRANSACTIONS, {
+                screen: 'AddTransaction',
+              }),
+            },
+            {
+              text: 'Add Budget',
+              onPress: () => navigation.navigate(TAB_NAMES.BUDGETS, {
+                screen: 'BudgetsList',
+              }),
+            },
+            { text: 'Cancel', style: 'cancel' },
+          ]
+        );
+      },
     };
 
     const action = quickAddActions[route.name];
     if (action) {
       action();
     } else {
-      Alert.alert("Action rapide", "Aucune action définie pour cet écran.");
+      navigation.navigate(TAB_NAMES.TRANSACTIONS, {
+        screen: 'AddTransaction',
+      });
     }
   };
 
@@ -235,19 +355,16 @@ function AppNavigator() {
 
   const screenOptions = ({ route }) => ({
     headerShown: false,
-    tabBarIcon: ({ focused, color, size }) => {
-      if (route.name === TAB_NAMES.QUICK_ADD) {
-        return <CustomAddButton focused={focused} />;
-      }
-
-      const iconName = getTabBarIcon(route.name, focused);
-      return <Icon name={iconName} size={size} color={color} />;
-    },
+    tabBarIcon: ({ focused, color, size }) => (
+      <CustomTabBarIcon route={route} focused={focused} color={color} size={size} />
+    ),
     tabBarActiveTintColor: Colors.primary.main,
     tabBarInactiveTintColor: Colors.neutral[400],
     tabBarStyle: styles.tabBar,
     tabBarLabelStyle: styles.tabBarLabel,
+    tabBarItemStyle: styles.tabBarItem,
     tabBarAccessibilityLabel: route.name,
+    tabBarShowLabel: true,
   });
 
   return (
@@ -255,7 +372,7 @@ function AppNavigator() {
       <Tab.Screen
         name={TAB_NAMES.HOME}
         component={HomeStackScreen}
-        options={{ tabBarLabel: 'Accueil' }}
+        options={{ tabBarLabel: 'Home' }}
       />
       <Tab.Screen
         name={TAB_NAMES.TRANSACTIONS}
@@ -263,19 +380,25 @@ function AppNavigator() {
         options={{ tabBarLabel: 'Transactions' }}
       />
       <Tab.Screen
+        name={TAB_NAMES.QUICK_ADD}
+        component={HomeStackScreen}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            handleQuickAdd();
+          },
+        }}
+        options={{ tabBarLabel: '' }}
+      />
+      <Tab.Screen
         name={TAB_NAMES.BUDGETS}
         component={BudgetsStackScreen}
         options={{ tabBarLabel: 'Budgets' }}
       />
       <Tab.Screen
-        name={TAB_NAMES.INSIGHT}
-        component={InsightStackScreen}
-        options={{ tabBarLabel: 'Analyse' }}
-      />
-      <Tab.Screen
         name={TAB_NAMES.PROFILE}
         component={ProfileStackScreen}
-        options={{ tabBarLabel: 'Profil' }}
+        options={{ tabBarLabel: 'Profile' }}
       />
     </Tab.Navigator>
   );
@@ -284,19 +407,42 @@ function AppNavigator() {
 // === STYLES ===
 const styles = StyleSheet.create({
   tabBar: {
-    height: Platform.OS === 'ios' ? 88 : 64,
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 20 : 16,
+    left: 16,
+    right: 16,
+    height: Platform.OS === 'ios' ? 72 : 64,
     backgroundColor: Colors.background.primary,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border.light,
+    borderRadius: Radius.lg,
+    borderTopWidth: 0,
     paddingTop: Spacing.xs,
-    paddingBottom: Platform.OS === 'ios' ? Spacing.lg : Spacing.sm,
-    ...Shadows.sm,
+    paddingBottom: Platform.OS === 'ios' ? Spacing.md : Spacing.sm,
+    paddingHorizontal: Spacing.xs,
+    ...Shadows.lg,
+    elevation: 8,
   },
   tabBarLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
-    marginTop: -Spacing.xs,
-  }
+    marginTop: -2,
+    marginBottom: 4,
+  },
+  tabBarItem: {
+    paddingVertical: Spacing.xs,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  activeIndicator: {
+    position: 'absolute',
+    top: -8,
+    width: 24,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: Colors.primary.main,
+  },
 });
 
 const customButtonStyles = StyleSheet.create({
@@ -304,32 +450,21 @@ const customButtonStyles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: -20,
   },
   button: {
-    width: 52,
-    height: 40,
-    borderRadius: Radius.sm,
+    width: 56,
+    height: 56,
+    borderRadius: Radius.full,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: Colors.primary.main,
-    ...Shadows.sm,
+    ...Shadows.lg,
+    elevation: 8,
   },
   focusedButton: {
     backgroundColor: Colors.primary.dark,
-  },
-});
-
-const placeholderStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background.secondary,
-  },
-  text: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: Colors.text.secondary,
+    transform: [{ scale: 1.05 }],
   },
 });
 
