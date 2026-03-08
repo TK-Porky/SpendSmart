@@ -1,20 +1,36 @@
-// Importations
+/**
+ * Transaction Service
+ * Handles all transaction-related operations with Firestore
+ * @module services/TransactionService
+ */
 import firestore from '@react-native-firebase/firestore';
-
-// Modèles
 import Transaction from '../models/Transaction';
 
+/**
+ * Service class for managing user transactions
+ * Provides CRUD operations and real-time listeners for transactions
+ */
 class TransactionService {
-
-  // Référence de la collection des utilisateurs
+  /** @private Firestore users collection reference */
   _usersCollection = firestore().collection('users');
 
-  // Référence de toutes les sous-collection d'un utilisateur
+  /**
+   * Gets the transactions subcollection for a specific user
+   * @private
+   * @param {string} uid - User ID
+   * @returns {FirebaseFirestoreTypes.CollectionReference} Transactions collection reference
+   */
   _getTransactionsCollection(uid) {
     return this._usersCollection.doc(uid).collection('transactions');
   }
 
-  // Ajoute une nouvelle transaction (income, expense, ou transfer) pour un utilisateur.
+  /**
+   * Adds a new transaction and updates related account balances atomically
+   * @param {string} uid - User ID
+   * @param {Transaction} transaction - Transaction instance to add
+   * @returns {Promise<Transaction>} The created transaction with ID
+   * @throws {Error} If transaction is invalid or accounts don't exist
+   */
   async addTransaction(uid, transaction) {
     if (!(transaction instanceof Transaction) || transaction.uid !== uid) {
       throw new Error('Invalid transaction object or UID mismatch.');
@@ -109,7 +125,12 @@ class TransactionService {
     return transaction;
   }
 
-  // Récupère toutes les transactions pour un utilisateur.
+  /**
+   * Retrieves all transactions for a user, ordered by date (newest first)
+   * @param {string} uid - User ID
+   * @returns {Promise<Transaction[]>} Array of Transaction instances
+   * @throws {Error} If fetching fails
+   */
   async getTransactions(uid) {
     try {
       const snapshot = await this._getTransactionsCollection(uid)
@@ -128,7 +149,13 @@ class TransactionService {
     }
   }
 
-  // Supprime une transaction et annule son impact sur le solde du/des compte(s) et le résumé global.
+  /**
+   * Deletes a transaction and reverts its impact on account balances atomically
+   * @param {string} uid - User ID
+   * @param {string} transactionId - ID of the transaction to delete
+   * @returns {Promise<void>}
+   * @throws {Error} If transaction not found or deletion fails
+   */
   async deleteTransaction(uid, transactionId) {
     const transactionRef =
       this._getTransactionsCollection(uid).doc(transactionId);
@@ -197,7 +224,12 @@ class TransactionService {
     );
   }
 
-  // Écoute les changements sur les transactions d'un utilisateur en temps réel.
+  /**
+   * Listens to real-time changes on user's transactions
+   * @param {string} uid - User ID
+   * @param {function(Transaction[]): void} callback - Callback receiving updated transactions array
+   * @returns {function(): void} Unsubscribe function to stop listening
+   */
   listenToTransactions(uid, callback) {
     const unsubscribe = this._getTransactionsCollection(uid)
       .orderBy('date', 'desc')

@@ -1,35 +1,9 @@
 // src/components/TransactionCard.js
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // Assurez-vous d'avoir cette bibliothèque
-
-// Fonction utilitaire pour le formatage de la devise
-// Idéalement, cette fonction serait dans un fichier utils/formatters.js
-const formatCurrency = (amount, currency = 'XOF') => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
-};
-
-// Fonction pour formater la date
-const formatDate = (date) => {
-  if (!date) return '';
-  const transactionDate = new Date(date); // Assurez-vous que c'est un objet Date
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-
-  if (transactionDate.toDateString() === today.toDateString()) {
-    return "Aujourd'hui";
-  } else if (transactionDate.toDateString() === yesterday.toDateString()) {
-    return "Hier";
-  } else {
-    return transactionDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-  }
-};
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { formatCurrency, formatDate } from '../utils';
+import { Colors } from '../constants';
 
 /**
  * Composant de carte réutilisable pour afficher une seule transaction.
@@ -40,7 +14,7 @@ const formatDate = (date) => {
  * @param {function} props.onPress - Fonction de rappel lorsque la carte est pressée.
  */
 const TransactionCard = ({ transaction, onPress }) => {
-  const amountColor = transaction.type === 'income' ? '#66BB6A' : '#EF5350'; // Vert pour revenu, Rouge pour dépense
+  const amountColor = transaction.type === 'income' ? Colors.transaction.income : Colors.transaction.expense;
   const iconName = transaction.type === 'income' ? 'credit-card-plus-outline' : 'credit-card-minus-outline'; // Exemples d'icônes
 
   const displayAmount = transaction.type === 'income'

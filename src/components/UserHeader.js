@@ -1,7 +1,7 @@
-/* eslint-disable react-native/no-inline-styles */
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Colors } from '../constants';
 
 const UserHeader = ({
   userProfile,
@@ -24,7 +24,7 @@ const UserHeader = ({
           </View>
         )}
         <View>
-          <Text style={{ color:'#fff' }}>Bonjour,</Text>
+          <Text style={styles.greeting}>Bonjour,</Text>
           <Text style={styles.userName}>{userDisplayName || 'Utilisateur'}</Text>
         </View>
       </TouchableOpacity>
@@ -76,7 +76,10 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: Colors.text.inverse,
+  },
+  greeting: {
+    color: Colors.text.inverse,
   },
   headerIcons: {
     flexDirection: 'row',

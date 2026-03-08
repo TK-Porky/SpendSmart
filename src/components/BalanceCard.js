@@ -2,16 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
-
-// Fonction utilitaire pour le formatage de la devise
-const formatCurrency = (amount, currency = 'XOF') => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
-};
+import { formatCurrency } from '../utils';
+import { Colors } from '../constants';
 
 // Composant de carte affichant le solde, les profits et les dépenses.
 const BalanceCard = ({
@@ -21,7 +13,7 @@ const BalanceCard = ({
   currency = 'XOF',
   onMorePress,
 }) => {
-  const gradientColors = ['#4730CA', '#231864'];
+  const gradientColors = Colors.gradients.primary;
   const gradientStart = { x: 0, y: 0 };
   const gradientEnd = { x: 0, y: 1 };  
   return (
@@ -115,12 +107,12 @@ const styles = StyleSheet.create({
   incomeText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#66BB6A', // Vert pour les profits
+    color: Colors.transaction.income,
   },
   expensesText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#EF5350', // Rouge pour les dépenses
+    color: Colors.transaction.expense,
   },
 });
 

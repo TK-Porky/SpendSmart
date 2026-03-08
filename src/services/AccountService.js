@@ -1,18 +1,36 @@
-// Importations
+/**
+ * Account Service
+ * Handles all account-related operations with Firestore
+ * @module services/AccountService
+ */
 import firestore from '@react-native-firebase/firestore';
 import Account from '../models/Account';
 
+/**
+ * Service class for managing user accounts (bank accounts, wallets, etc.)
+ * Provides CRUD operations and real-time listeners for accounts
+ */
 class AccountService {
-
-  // Référence à la collection d'un utilisateur
+  /** @private Firestore users collection reference */
   _usersCollection = firestore().collection('users');
 
-  // Récupère la sous-collection 'accounts' pour un utilisateur spécifique
+  /**
+   * Gets the accounts subcollection for a specific user
+   * @private
+   * @param {string} uid - User ID
+   * @returns {FirebaseFirestoreTypes.CollectionReference} Accounts collection reference
+   */
   _getAccountsCollection(uid) {
     return this._usersCollection.doc(uid).collection('accounts');
   }
 
-  // Ajoute un nouveau compte utilisateur
+  /**
+   * Adds a new account for a user
+   * @param {string} uid - User ID
+   * @param {Account} account - Account instance to add
+   * @returns {Promise<Account>} The created account with ID
+   * @throws {Error} If account is invalid or creation fails
+   */
   async addAccount(uid, account) {
     try {
       if (!(account instanceof Account) || account.uid !== uid) {
@@ -30,7 +48,12 @@ class AccountService {
     }
   }
 
-  // Récupère tous les comptes d'un utilisateur
+  /**
+   * Retrieves all accounts for a user, ordered by creation date
+   * @param {string} uid - User ID
+   * @returns {Promise<Account[]>} Array of Account instances
+   * @throws {Error} If fetching fails
+   */
   async getAccounts(uid) {
     try {
       const snapshot = await this._getAccountsCollection(uid)
@@ -47,7 +70,13 @@ class AccountService {
     }
   }
 
-  // Récupère un compte spécique
+  /**
+   * Retrieves a specific account by ID
+   * @param {string} uid - User ID
+   * @param {string} accountId - Account ID
+   * @returns {Promise<Account|null>} Account instance or null if not found
+   * @throws {Error} If fetching fails
+   */
   async getAccount(uid, accountId) {
     try {
       const doc = await this._getAccountsCollection(uid).doc(accountId).get();
@@ -62,7 +91,14 @@ class AccountService {
     }
   }
 
-  // Met à jour un compte existant
+  /**
+   * Updates an existing account with new data
+   * @param {string} uid - User ID
+   * @param {string} accountId - Account ID to update
+   * @param {Object} updates - Fields to update
+   * @returns {Promise<void>}
+   * @throws {Error} If update fails
+   */
   async updateAccount(uid, accountId, updates) {
     try {
       await this._getAccountsCollection(uid)
@@ -78,9 +114,15 @@ class AccountService {
     }
   }
 
-  
-  // Met à jour le solde actuel d'un compte.
-  // ! PRECAUTION: il est préférable de laisser les transactions gérer les soldes.
+  /**
+   * Updates the current balance of an account by a given amount
+   * @warning Prefer using TransactionService which handles balance updates atomically
+   * @param {string} uid - User ID
+   * @param {string} accountId - Account ID
+   * @param {number} amountChange - Amount to add (positive) or subtract (negative)
+   * @returns {Promise<void>}
+   * @throws {Error} If update fails
+   */
   async updateAccountBalance(uid, accountId, amountChange) {
     try {
       const accountRef = this._getAccountsCollection(uid).doc(accountId);
@@ -97,7 +139,13 @@ class AccountService {
     }
   }
 
-  // Supprime un compte
+  /**
+   * Deletes an account
+   * @param {string} uid - User ID
+   * @param {string} accountId - Account ID to delete
+   * @returns {Promise<void>}
+   * @throws {Error} If deletion fails
+   */
   async deleteAccount(uid, accountId) {
     try {
       await this._getAccountsCollection(uid).doc(accountId).delete();
@@ -108,7 +156,12 @@ class AccountService {
     }
   }
 
-  // Écoute les changements sur les comptes d'un utilisateur en temps réel.
+  /**
+   * Listens to real-time changes on user's accounts
+   * @param {string} uid - User ID
+   * @param {function(Account[]): void} callback - Callback receiving updated accounts array
+   * @returns {function(): void} Unsubscribe function to stop listening
+   */
   listenToAccounts(uid, callback) {
     const unsubscribe = this._getAccountsCollection(uid)
       .orderBy('name', 'asc')

@@ -1,11 +1,19 @@
 // src/components/CategoryCard.js
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Colors } from '../constants';
 
-// Fonction utilitaire pour le formatage du montant (15000 -> 15K)
+/**
+ * Formats amount for compact display (15000 -> 15K)
+ * @param {number} amount - The amount to format
+ * @returns {string} Formatted amount string
+ */
 const formatAmountForDisplay = (amount) => {
+  if (amount >= 1000000) {
+    return `${(amount / 1000000).toFixed(1)}M`;
+  }
   if (amount >= 1000) {
-    return `${(amount / 1000).toFixed(0)}K`; // Pour 15000 -> 15K
+    return `${(amount / 1000).toFixed(0)}K`;
   }
   return amount.toString();
 };

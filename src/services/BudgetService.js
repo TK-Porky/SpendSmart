@@ -1,18 +1,36 @@
-// Importations
+/**
+ * Budget Service
+ * Handles all budget-related operations with Firestore
+ * @module services/BudgetService
+ */
 import firestore from '@react-native-firebase/firestore';
-
-// Modèles
 import Budget from '../models/Budget';
 
+/**
+ * Service class for managing user budgets
+ * Provides CRUD operations and real-time listeners for budgets
+ */
 class BudgetService {
+  /** @private Firestore users collection reference */
   _usersCollection = firestore().collection('users');
 
-  // Crée une référence à la sous-collection 'budgets' pour un utilisateur spécifique.
+  /**
+   * Gets the budgets subcollection for a specific user
+   * @private
+   * @param {string} uid - User ID
+   * @returns {FirebaseFirestoreTypes.CollectionReference} Budgets collection reference
+   */
   _getBudgetsCollection(uid) {
     return this._usersCollection.doc(uid).collection('budgets');
   }
 
-  // Ajoute un nouveau budget pour un utilisateur.
+  /**
+   * Adds a new budget for a user
+   * @param {string} uid - User ID
+   * @param {Budget} budget - Budget instance to add
+   * @returns {Promise<Budget>} The created budget with ID
+   * @throws {Error} If budget is invalid or creation fails
+   */
   async addBudget(uid, budget) {
     try {
       if (!(budget instanceof Budget) || budget.uid !== uid) {
@@ -30,7 +48,12 @@ class BudgetService {
     }
   }
 
-  // Récupère tous les budgets d'un utilisateur
+  /**
+   * Retrieves all budgets for a user, ordered by start date (newest first)
+   * @param {string} uid - User ID
+   * @returns {Promise<Budget[]>} Array of Budget instances
+   * @throws {Error} If fetching fails
+   */
   async getBudgets(uid) {
     try {
       const snapshot = await this._getBudgetsCollection(uid)
@@ -47,7 +70,14 @@ class BudgetService {
     }
   }
 
-  // Met à jour un budget existant.
+  /**
+   * Updates an existing budget with new data
+   * @param {string} uid - User ID
+   * @param {string} budgetId - Budget ID to update
+   * @param {Object} updates - Fields to update
+   * @returns {Promise<void>}
+   * @throws {Error} If update fails
+   */
   async updateBudget(uid, budgetId, updates) {
     try {
       await this._getBudgetsCollection(uid)
@@ -63,7 +93,13 @@ class BudgetService {
     }
   }
 
-  // Supprime un budget
+  /**
+   * Deletes a budget
+   * @param {string} uid - User ID
+   * @param {string} budgetId - Budget ID to delete
+   * @returns {Promise<void>}
+   * @throws {Error} If deletion fails
+   */
   async deleteBudget(uid, budgetId) {
     try {
       await this._getBudgetsCollection(uid).doc(budgetId).delete();
@@ -74,7 +110,12 @@ class BudgetService {
     }
   }
 
-  // Écoute les changements sur les budgets d'un utilisateur en temps réel.
+  /**
+   * Listens to real-time changes on user's budgets
+   * @param {string} uid - User ID
+   * @param {function(Budget[]): void} callback - Callback receiving updated budgets array
+   * @returns {function(): void} Unsubscribe function to stop listening
+   */
   listenToBudgets(uid, callback) {
     const unsubscribe = this._getBudgetsCollection(uid)
       .orderBy('startDate', 'desc')
