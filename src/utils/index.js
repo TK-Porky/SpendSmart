@@ -27,3 +27,14 @@ export {
   validateAccount,
   sanitizeInput,
 } from './validators';
+
+export {
+  ErrorTypes,
+  parseError,
+  logError,
+  handleError,
+  withErrorHandler,
+  isNetworkError,
+  isAuthError,
+  getErrorAction,
+} from './errorHandler';
