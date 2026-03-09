@@ -101,15 +101,11 @@ function ProfileScreen() {
   };
 
   const navigateTo = (screenName) => {
-    // TODO: Navigate to settings screens
-    console.log('Navigate to:', screenName);
-    Alert.alert('Coming Soon', `${screenName} screen will be available soon.`);
+    navigation.navigate(screenName);
   };
 
   const handleEditProfile = () => {
-    // TODO: Navigate to edit profile
-    console.log('Edit profile');
-    Alert.alert('Coming Soon', 'Edit profile will be available soon.');
+    navigation.navigate('EditProfile');
   };
 
   const handleEditAvatar = () => {
@@ -229,7 +225,7 @@ function ProfileScreen() {
               icon="cog-outline"
               label="General Settings"
               color={Colors.primary.main}
-              onPress={() => navigateTo('Settings')}
+              onPress={() => navigateTo('GeneralSettings')}
             />
             <MenuItem
               icon="bell-outline"
@@ -241,7 +237,7 @@ function ProfileScreen() {
               icon="shield-lock-outline"
               label="Security & Privacy"
               color={Colors.error}
-              onPress={() => navigateTo('Security')}
+              onPress={() => navigateTo('SecurityPrivacy')}
               showDivider={false}
             />
           </View>
@@ -256,7 +252,7 @@ function ProfileScreen() {
               icon="currency-usd"
               label="Currency & Language"
               color={Colors.success}
-              onPress={() => navigateTo('Currency')}
+              onPress={() => navigateTo('CurrencyLanguage')}
             />
             <MenuItem
               icon="palette-outline"
@@ -268,7 +264,7 @@ function ProfileScreen() {
               icon="database-outline"
               label="Data & Storage"
               color={Colors.neutral[600]}
-              onPress={() => navigateTo('Data')}
+              onPress={() => Alert.alert('Coming Soon', 'Data & Storage settings will be available soon.')}
               showDivider={false}
             />
           </View>

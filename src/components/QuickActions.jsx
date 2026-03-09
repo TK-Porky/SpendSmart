@@ -14,9 +14,9 @@ import { Colors, Spacing, Radius } from '../constants';
  * @param {function} props.onSend - Callback for send action
  * @param {function} props.onReceive - Callback for receive action
  * @param {function} props.onPay - Callback for pay action
- * @param {function} props.onMore - Callback for more action
+ * @param {function} props.onScan - Callback for scan QR action
  */
-const QuickActions = ({ onSend, onReceive, onPay, onMore }) => {
+const QuickActions = ({ onSend, onReceive, onPay, onScan }) => {
   const actions = [
     {
       id: 'send',
@@ -40,11 +40,11 @@ const QuickActions = ({ onSend, onReceive, onPay, onMore }) => {
       onPress: onPay,
     },
     {
-      id: 'more',
-      icon: 'dots-horizontal',
-      label: 'More',
-      color: Colors.neutral[600],
-      onPress: onMore,
+      id: 'scan',
+      icon: 'qrcode-scan',
+      label: 'Scan',
+      color: '#8B5CF6',
+      onPress: onScan,
     },
   ];
 

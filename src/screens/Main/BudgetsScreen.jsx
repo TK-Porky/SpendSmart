@@ -120,8 +120,10 @@ function BudgetsScreen({ navigation }) {
   };
 
   const handleEditBudget = (budget) => {
-    // TODO: Navigate to edit budget screen
-    console.log('Edit budget:', budget.id);
+    navigation.navigate('BudgetForm', {
+      budgetId: budget.id,
+      budget: budget,
+    });
   };
 
   const handleDeleteBudget = (budget) => {
@@ -147,8 +149,10 @@ function BudgetsScreen({ navigation }) {
   };
 
   const handleEditAccount = (account) => {
-    // TODO: Navigate to edit account screen
-    console.log('Edit account:', account.id);
+    navigation.navigate('AccountForm', {
+      accountId: account.id,
+      account: account,
+    });
   };
 
   const handleDeleteAccount = (account) => {
@@ -174,8 +178,11 @@ function BudgetsScreen({ navigation }) {
   };
 
   const handleAddNew = () => {
-    // TODO: Navigate to add budget/account screen
-    console.log('Add new', activeTab);
+    if (activeTab === 'budgets') {
+      navigation.navigate('BudgetForm');
+    } else {
+      navigation.navigate('AccountForm');
+    }
   };
 
   // Render header
@@ -367,15 +374,6 @@ function BudgetsScreen({ navigation }) {
         {/* Bottom padding for floating tab bar */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
-
-      {/* Floating Action Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleAddNew}
-        activeOpacity={0.9}
-      >
-        <Icon name="plus" size={28} color={Colors.text.inverse} />
-      </TouchableOpacity>
     </View>
   );
 }

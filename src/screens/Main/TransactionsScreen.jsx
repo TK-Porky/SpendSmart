@@ -170,10 +170,19 @@ function TransactionsScreen({ navigation, route }) {
   const renderHeader = () => (
     <View style={styles.header}>
       <View style={styles.headerTop}>
-        <Text style={styles.headerTitle}>Transactions</Text>
-        <View style={styles.transactionCount}>
-          <Text style={styles.transactionCountText}>{filteredTransactions.length}</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerTitle}>Transactions</Text>
+          <View style={styles.transactionCount}>
+            <Text style={styles.transactionCountText}>{filteredTransactions.length}</Text>
+          </View>
         </View>
+        <TouchableOpacity
+          style={styles.insightButton}
+          onPress={() => navigation.navigate('Insight')}
+          activeOpacity={0.7}
+        >
+          <Icon name="chart-bar" size={24} color={Colors.primary.main} />
+        </TouchableOpacity>
       </View>
       <Text style={styles.headerSubtitle}>
         Track and manage your transactions
@@ -254,15 +263,6 @@ function TransactionsScreen({ navigation, route }) {
         {/* Bottom padding for floating tab bar */}
         <View style={styles.bottomSpacer} />
       </ScrollView>
-
-      {/* Floating Action Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleAddTransaction}
-        activeOpacity={0.9}
-      >
-        <Icon name="plus" size={28} color={Colors.text.inverse} />
-      </TouchableOpacity>
     </View>
   );
 }
@@ -281,8 +281,13 @@ const styles = StyleSheet.create({
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    justifyContent: 'space-between',
     marginBottom: Spacing.xs,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
   },
   headerTitle: {
     ...Typography.h1,
@@ -294,6 +299,14 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: Radius.full,
     minWidth: 32,
+    alignItems: 'center',
+  },
+  insightButton: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.primary.subtle,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   transactionCountText: {

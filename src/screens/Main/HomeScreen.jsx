@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 
@@ -97,19 +96,19 @@ function HomeScreen({ navigation }) {
 
   // Quick Actions
   const handleSend = () => {
-    Alert.alert('Send Money', 'Send money feature coming soon!');
+    navigation.navigate('SendMoney');
   };
 
   const handleReceive = () => {
-    Alert.alert('Receive Money', 'Receive money feature coming soon!');
+    navigation.navigate('ReceiveMoney');
   };
 
   const handlePay = () => {
-    Alert.alert('Pay Bills', 'Pay bills feature coming soon!');
+    navigation.navigate('PayBills');
   };
 
-  const handleMore = () => {
-    navigation.navigate('Profile', { screen: 'Settings' });
+  const handleScanQR = () => {
+    navigation.navigate('ScanQR');
   };
 
   const userCurrency = balanceSummary ? balanceSummary.currency || 'XOF' : 'XOF';
@@ -157,7 +156,7 @@ function HomeScreen({ navigation }) {
           onSend={handleSend}
           onReceive={handleReceive}
           onPay={handlePay}
-          onMore={handleMore}
+          onScan={handleScanQR}
         />
 
         {/* Recent Transactions */}

@@ -35,3 +35,4 @@ export { default as SkeletonCard, SkeletonList } from './SkeletonCard';
 
 // Dialogs
 export { default as ConfirmDialog, useConfirmDialog } from './ConfirmDialog';
+export { default as BottomSheetModal } from './BottomSheetModal';

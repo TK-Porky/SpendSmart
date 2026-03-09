@@ -1,7 +1,6 @@
 /**
- * Statistics Screen
- * Financial analysis with charts and category breakdown
- * Minimalist flat design with Modern Teal accent
+ * StatisticsScreen
+ * Modern financial insights with charts and analytics
  * @module screens/Main/StatisticsScreen
  */
 import React, { useState, useEffect, useCallback } from 'react';
@@ -12,48 +11,39 @@ import {
   ScrollView,
   Dimensions,
   Platform,
-  FlatList,
   TouchableOpacity,
-  RefreshControl
+  RefreshControl,
 } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
-import DropdownPicker from 'react-native-dropdown-picker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import CategoryCard from '../../components/CategoryCard';
-import { SkeletonCard, SkeletonList, EmptyState, EmptyStatePresets } from '../../components';
-import { Colors, Spacing, Radius, Shadows, Typography } from '../../constants';
+import LinearGradient from 'react-native-linear-gradient';
+import {
+  SkeletonList,
+  EmptyState,
+  EmptyStatePresets,
+  MonthSelector,
+} from '../../components';
+import { Colors, Spacing, Radius, Shadows } from '../../constants';
 import { formatCurrency } from '../../utils';
-
 import { analysisService } from '../../services/AnalysisService';
 import auth from '@react-native-firebase/auth';
 
 const screenWidth = Dimensions.get('window').width;
 
-const periods = [
-  { label: 'Cette semaine', value: 'week' },
-  { label: 'Ce mois', value: 'month' },
-  { label: 'Cette année', value: 'year' },
-  { label: 'Personnalisé', value: 'custom' },
-];
-
-const analysisTypes = [
-  { label: 'Dépenses', value: 'expense' },
-  { label: 'Revenus', value: 'income' },
-  { label: 'Net (R-D)', value: 'net' },
+const ANALYSIS_TYPES = [
+  { id: 'expense', label: 'Expenses', icon: 'arrow-up', color: '#EF4444' },
+  { id: 'income', label: 'Income', icon: 'arrow-down', color: '#10B981' },
+  { id: 'net', label: 'Net', icon: 'chart-line', color: '#3B82F6' },
 ];
 
 function StatisticsScreen({ navigation }) {
-  const [user, setUser] = useState(auth().currentUser);
+  const [user] = useState(auth().currentUser);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const [openAnalysisDropdown, setOpenAnalysisDropdown] = useState(false);
-  const [openPeriodDropdown, setOpenPeriodDropdown] = useState(false);
   const [selectedAnalysisType, setSelectedAnalysisType] = useState('expense');
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
-
-  const [analysisDropdownItems, setAnalysisDropdownItems] = useState(analysisTypes);
-  const [periodDropdownItems, setPeriodDropdownItems] = useState(periods);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const [analysisData, setAnalysisData] = useState({
     categorySummary: [],
@@ -61,78 +51,62 @@ function StatisticsScreen({ navigation }) {
     totalAmountForPeriod: 0,
   });
 
-  const [categoriesData, setCategoriesData] = useState([]);
-
   const fetchAnalysisData = useCallback(async () => {
     if (!user?.uid) return;
 
     setLoading(true);
-    setRefreshing(true);
     try {
-      const data = await analysisService.getAnalysisData(user.uid, selectedPeriod, selectedAnalysisType);
+      const data = await analysisService.getAnalysisData(
+        user.uid,
+        'month',
+        selectedAnalysisType
+      );
       setAnalysisData(data);
-
-      const categoryCards = data.categorySummary.map(item => ({
-        id: item.id || Math.random().toString(36).substr(2, 9),
-        name: item.name,
-        description: `Total pour la période: ${formatCurrency(Math.abs(item.total))}`,
-        amount: Math.abs(item.total),
-        color: item.color,
-        iconName: item.iconName
-      }));
-      setCategoriesData(categoryCards);
-
     } catch (error) {
-      console.error("Erreur lors du chargement des données d'analyse:", error);
+      console.error('Error loading analysis data:', error);
       setFallbackData();
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user.uid, selectedPeriod, selectedAnalysisType, setFallbackData]);
+  }, [user?.uid, selectedAnalysisType]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const setFallbackData = () => {
     if (selectedAnalysisType === 'expense') {
       setAnalysisData({
         categorySummary: [
-          { id: 'cat1', name: 'Alimentation', total: 25000, color: Colors.error, iconName: 'food' },
-          { id: 'cat2', name: 'Transport', total: 15000, color: Colors.primary.main, iconName: 'car' },
-          { id: 'cat3', name: 'Divertissement', total: 10000, color: Colors.warning, iconName: 'movie' },
+          { id: 'cat1', name: 'Food & Dining', total: 25000, color: '#F59E0B', iconName: 'food' },
+          { id: 'cat2', name: 'Transportation', total: 15000, color: '#3B82F6', iconName: 'car' },
+          { id: 'cat3', name: 'Entertainment', total: 10000, color: '#EC4899', iconName: 'movie' },
+          { id: 'cat4', name: 'Shopping', total: 8000, color: '#8B5CF6', iconName: 'shopping' },
         ],
         dailyGraphData: {
-          labels: ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
-          datasets: [{
-            data: [2000, 4500, 2800, 8000, 9900, 4300, 6000],
-            color: (opacity = 1) => `rgba(239, 68, 68, ${opacity})`
-          }],
+          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+          datasets: [{ data: [12000, 15000, 18000, 13000] }],
         },
-        totalAmountForPeriod: 50000,
+        totalAmountForPeriod: 58000,
       });
-      setCategoriesData([
-        { id: 'cat1', name: 'Alimentation', description: 'Courses, restaurants', amount: 25000, color: Colors.error },
-        { id: 'cat2', name: 'Transport', description: 'Bus, taxi, essence', amount: 15000, color: Colors.primary.main },
-        { id: 'cat3', name: 'Divertissement', description: 'Films, sorties', amount: 10000, color: Colors.warning },
-      ]);
     } else if (selectedAnalysisType === 'income') {
       setAnalysisData({
         categorySummary: [
-          { id: 'cat4', name: 'Salaire', total: 100000, color: Colors.success, iconName: 'cash' },
-          { id: 'cat5', name: 'Freelance', total: 25000, color: '#69DB7C', iconName: 'laptop' },
+          { id: 'cat4', name: 'Salary', total: 100000, color: '#10B981', iconName: 'cash' },
+          { id: 'cat5', name: 'Freelance', total: 25000, color: '#06B6D4', iconName: 'laptop' },
         ],
         dailyGraphData: {
-          labels: ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin"],
-          datasets: [{
-            data: [10000, 20000, 15000, 30000, 25000, 40000],
-            color: (opacity = 1) => `rgba(34, 197, 94, ${opacity})`
-          }],
+          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+          datasets: [{ data: [25000, 30000, 35000, 35000] }],
         },
         totalAmountForPeriod: 125000,
       });
-      setCategoriesData([
-        { id: 'cat4', name: 'Salaire', description: 'Revenu mensuel', amount: 100000, color: Colors.success },
-        { id: 'cat5', name: 'Freelance', description: 'Projets secondaires', amount: 25000, color: '#69DB7C' },
-      ]);
+    } else {
+      setAnalysisData({
+        categorySummary: [],
+        dailyGraphData: {
+          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+          datasets: [{ data: [13000, 15000, 17000, 22000] }],
+        },
+        totalAmountForPeriod: 67000,
+      });
     }
   };
 
@@ -140,24 +114,31 @@ function StatisticsScreen({ navigation }) {
     fetchAnalysisData();
   }, [fetchAnalysisData]);
 
-  const handleCategoryPress = (category) => {
-    console.log("Catégorie sélectionnée:", category);
-  };
-
   const onRefresh = useCallback(() => {
+    setRefreshing(true);
     fetchAnalysisData();
   }, [fetchAnalysisData]);
 
-  const { categorySummary, dailyGraphData, totalAmountForPeriod } = analysisData;
-  const userCurrency = 'XOF';
+  const handleMonthChange = (month, year) => {
+    setSelectedMonth(month);
+    setSelectedYear(year);
+  };
+
+  const getGradientColors = () => {
+    switch (selectedAnalysisType) {
+      case 'expense':
+        return ['#EF4444', '#DC2626'];
+      case 'income':
+        return ['#10B981', '#059669'];
+      case 'net':
+        return ['#3B82F6', '#2563EB'];
+      default:
+        return ['#8B5CF6', '#7C3AED'];
+    }
+  };
 
   const getAnalysisColor = () => {
-    switch (selectedAnalysisType) {
-      case 'expense': return Colors.error;
-      case 'income': return Colors.success;
-      case 'net': return Colors.primary.main;
-      default: return Colors.primary.main;
-    }
+    return ANALYSIS_TYPES.find((t) => t.id === selectedAnalysisType)?.color || '#8B5CF6';
   };
 
   const chartConfig = {
@@ -165,51 +146,196 @@ function StatisticsScreen({ navigation }) {
     backgroundGradientFromOpacity: 1,
     backgroundGradientTo: Colors.background.card,
     backgroundGradientToOpacity: 1,
-    color: (opacity = 1) => {
-      if (selectedAnalysisType === 'expense') return `rgba(239, 68, 68, ${opacity})`;
-      if (selectedAnalysisType === 'income') return `rgba(34, 197, 94, ${opacity})`;
-      return `rgba(13, 148, 136, ${opacity})`;
-    },
-    labelColor: (opacity = 1) => `rgba(107, 114, 128, ${opacity})`,
+    color: (opacity = 1) => `${getAnalysisColor()}${Math.round(opacity * 255).toString(16)}`,
+    labelColor: () => Colors.text.secondary,
     strokeWidth: 2,
-    barPercentage: 0.6,
+    barPercentage: 0.7,
     useShadowColorFromDataset: false,
     decimalPlaces: 0,
     propsForLabels: {
-      fontSize: 11,
-      fontWeight: 'bold',
+      fontSize: 12,
+      fontWeight: '600',
     },
     propsForBackgroundLines: {
       strokeDasharray: '',
       stroke: Colors.border.light,
+      strokeWidth: 1,
     },
   };
 
-  const getHeaderTitle = () => {
-    switch (selectedAnalysisType) {
-      case 'expense': return 'Analyse des Dépenses';
-      case 'income': return 'Analyse des Revenus';
-      case 'net': return 'Analyse Nette';
-      default: return 'Analyse Financière';
+  const { categorySummary, dailyGraphData, totalAmountForPeriod } = analysisData;
+
+  const renderHeader = () => (
+    <LinearGradient colors={getGradientColors()} style={styles.header}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+        activeOpacity={0.7}
+      >
+        <Icon name="arrow-left" size={24} color={Colors.text.inverse} />
+      </TouchableOpacity>
+
+      <View style={styles.headerCenter}>
+        <Text style={styles.headerTitle}>Financial Insights</Text>
+        <Text style={styles.headerSubtitle}>Track your spending patterns</Text>
+      </View>
+
+      <View style={styles.headerSpacer} />
+    </LinearGradient>
+  );
+
+  const renderAnalysisTypeSelector = () => (
+    <View style={styles.analysisTypeContainer}>
+      {ANALYSIS_TYPES.map((type) => (
+        <TouchableOpacity
+          key={type.id}
+          style={[
+            styles.analysisTypeChip,
+            selectedAnalysisType === type.id && [
+              styles.analysisTypeChipActive,
+              { backgroundColor: `${type.color}15`, borderColor: type.color },
+            ],
+          ]}
+          onPress={() => setSelectedAnalysisType(type.id)}
+          activeOpacity={0.7}
+        >
+          <Icon
+            name={type.icon}
+            size={18}
+            color={selectedAnalysisType === type.id ? type.color : Colors.text.secondary}
+          />
+          <Text
+            style={[
+              styles.analysisTypeText,
+              selectedAnalysisType === type.id && { color: type.color },
+            ]}
+          >
+            {type.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  const renderOverviewCard = () => (
+    <View style={styles.overviewCard}>
+      <View style={styles.overviewHeader}>
+        <View style={[styles.overviewIcon, { backgroundColor: `${getAnalysisColor()}15` }]}>
+          <Icon
+            name={ANALYSIS_TYPES.find((t) => t.id === selectedAnalysisType)?.icon || 'chart-bar'}
+            size={28}
+            color={getAnalysisColor()}
+          />
+        </View>
+        <View style={styles.overviewInfo}>
+          <Text style={styles.overviewLabel}>
+            Total {ANALYSIS_TYPES.find((t) => t.id === selectedAnalysisType)?.label}
+          </Text>
+          <Text style={[styles.overviewAmount, { color: getAnalysisColor() }]}>
+            {formatCurrency(totalAmountForPeriod)}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderChart = () => (
+    <View style={styles.chartCard}>
+      <View style={styles.chartHeader}>
+        <Text style={styles.chartTitle}>Trends</Text>
+        <View style={[styles.chartBadge, { backgroundColor: `${getAnalysisColor()}15` }]}>
+          <Text style={[styles.chartBadgeText, { color: getAnalysisColor() }]}>Monthly</Text>
+        </View>
+      </View>
+
+      {dailyGraphData && dailyGraphData.datasets[0].data.length > 0 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <BarChart
+            data={dailyGraphData}
+            width={Math.max(screenWidth - 80, dailyGraphData.labels.length * 80)}
+            height={200}
+            yAxisLabel=""
+            yAxisSuffix=""
+            chartConfig={chartConfig}
+            fromZero
+            showValuesOnTopOfBars
+            style={styles.chart}
+          />
+        </ScrollView>
+      ) : (
+        <View style={styles.noDataContainer}>
+          <Icon name="chart-bar-stacked" size={48} color={Colors.border.light} />
+          <Text style={styles.noDataText}>No data available for this period</Text>
+        </View>
+      )}
+    </View>
+  );
+
+  const renderCategories = () => {
+    if (categorySummary.length === 0) {
+      return (
+        <EmptyState
+          {...EmptyStatePresets.statistics}
+          style={{ paddingVertical: 40 }}
+        />
+      );
     }
+
+    return (
+      <View style={styles.categoriesSection}>
+        <Text style={styles.sectionTitle}>Category Breakdown</Text>
+
+        {categorySummary.map((item, index) => {
+          const percentage =
+            totalAmountForPeriod !== 0
+              ? (Math.abs(item.total) / Math.abs(totalAmountForPeriod)) * 100
+              : 0;
+
+          return (
+            <TouchableOpacity key={index} style={styles.categoryItem} activeOpacity={0.7}>
+              <View
+                style={[
+                  styles.categoryIcon,
+                  { backgroundColor: item.color || Colors.primary.main },
+                ]}
+              >
+                <Icon name={item.iconName || 'help-circle'} size={22} color={Colors.text.inverse} />
+              </View>
+
+              <View style={styles.categoryContent}>
+                <View style={styles.categoryHeader}>
+                  <Text style={styles.categoryName}>{item.name}</Text>
+                  <Text style={styles.categoryAmount}>{formatCurrency(Math.abs(item.total))}</Text>
+                </View>
+
+                <View style={styles.categoryFooter}>
+                  <View style={styles.progressBarContainer}>
+                    <View
+                      style={[
+                        styles.progressBar,
+                        {
+                          width: `${percentage}%`,
+                          backgroundColor: item.color || Colors.primary.main,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.categoryPercentage}>{percentage.toFixed(0)}%</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
   };
 
   if (loading && !refreshing) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.pageTitle}>{getHeaderTitle()}</Text>
-          <View style={[styles.typeBadge, { backgroundColor: `${getAnalysisColor()}20` }]}>
-            <Text style={[styles.typeBadgeText, { color: getAnalysisColor() }]}>
-              {selectedAnalysisType === 'expense' ? 'Dépenses' : selectedAnalysisType === 'income' ? 'Revenus' : 'Net'}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.contentWrapper}>
-          <View style={{ marginTop: Spacing.lg }}>
-            <SkeletonCard variant="balance" style={{ marginHorizontal: 0, marginBottom: Spacing.lg }} />
-            <SkeletonList count={4} variant="transaction" />
-          </View>
+        {renderHeader()}
+        <View style={styles.content}>
+          <SkeletonList count={5} variant="transaction" />
         </View>
       </View>
     );
@@ -217,175 +343,33 @@ function StatisticsScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {renderHeader()}
+
       <ScrollView
-        style={styles.scrollViewContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[Colors.primary.main]}
-            tintColor={Colors.primary.main}
+            colors={[getAnalysisColor()]}
+            tintColor={getAnalysisColor()}
           />
         }
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.pageTitle}>{getHeaderTitle()}</Text>
-          <View style={[styles.typeBadge, { backgroundColor: `${getAnalysisColor()}20` }]}>
-            <Text style={[styles.typeBadgeText, { color: getAnalysisColor() }]}>
-              {selectedAnalysisType === 'expense' ? 'Dépenses' : selectedAnalysisType === 'income' ? 'Revenus' : 'Net'}
-            </Text>
-          </View>
+        <View style={styles.content}>
+          <MonthSelector
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onMonthChange={handleMonthChange}
+          />
+
+          {renderAnalysisTypeSelector()}
+          {renderOverviewCard()}
+          {renderChart()}
+          {renderCategories()}
+
+          <View style={styles.bottomSpacer} />
         </View>
-
-        <View style={styles.contentWrapper}>
-          {/* Filters */}
-          <View style={styles.filtersContainer}>
-            <View style={styles.dropdownWrapper}>
-              <Text style={styles.dropdownLabel}>Type d'analyse</Text>
-              <DropdownPicker
-                open={openAnalysisDropdown}
-                value={selectedAnalysisType}
-                items={analysisDropdownItems}
-                setOpen={setOpenAnalysisDropdown}
-                setValue={setSelectedAnalysisType}
-                setItems={setAnalysisDropdownItems}
-                containerStyle={styles.pickerContainer}
-                style={styles.pickerStyle}
-                itemSeparatorStyle={styles.pickerItemSeparator}
-                textStyle={styles.pickerTextStyle}
-                dropDownContainerStyle={styles.dropdownListContainer}
-                ArrowDownIconComponent={({ size, color }) => (
-                  <Icon name="chevron-down" size={size || 20} color={Colors.text.secondary} />
-                )}
-                ArrowUpIconComponent={({ size, color }) => (
-                  <Icon name="chevron-up" size={size || 20} color={Colors.text.secondary} />
-                )}
-                zIndex={3000}
-                zIndexInverse={1000}
-              />
-            </View>
-
-            <View style={styles.dropdownWrapper}>
-              <Text style={styles.dropdownLabel}>Période</Text>
-              <DropdownPicker
-                open={openPeriodDropdown}
-                value={selectedPeriod}
-                items={periodDropdownItems}
-                setOpen={setOpenPeriodDropdown}
-                setValue={setSelectedPeriod}
-                setItems={setPeriodDropdownItems}
-                containerStyle={styles.pickerContainer}
-                style={styles.pickerStyle}
-                itemSeparatorStyle={styles.pickerItemSeparator}
-                textStyle={styles.pickerTextStyle}
-                dropDownContainerStyle={styles.dropdownListContainer}
-                ArrowDownIconComponent={({ size, color }) => (
-                  <Icon name="chevron-down" size={size || 20} color={Colors.text.secondary} />
-                )}
-                ArrowUpIconComponent={({ size, color }) => (
-                  <Icon name="chevron-up" size={size || 20} color={Colors.text.secondary} />
-                )}
-                zIndex={2000}
-                zIndexInverse={2000}
-              />
-            </View>
-          </View>
-
-          {/* Chart Section */}
-          <View style={styles.chartCard}>
-            <Text style={styles.chartTitle}>
-              Tendances {selectedAnalysisType === 'expense' ? 'de Dépenses' : selectedAnalysisType === 'income' ? 'de Revenus' : 'Nettes'}
-            </Text>
-            {dailyGraphData && dailyGraphData.datasets[0].data.length > 0 ? (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <BarChart
-                  data={dailyGraphData}
-                  width={Math.max(screenWidth - 40, dailyGraphData.labels.length * 60)}
-                  height={220}
-                  yAxisLabel=""
-                  yAxisSuffix=""
-                  chartConfig={chartConfig}
-                  verticalLabelRotation={Platform.OS === 'android' ? 0 : -30}
-                  fromZero={true}
-                  showValuesOnTopOfBars={true}
-                  withCustomBarColorFromData={true}
-                  flatColor={true}
-                  style={styles.chartStyle}
-                />
-              </ScrollView>
-            ) : (
-              <View style={styles.noDataContainer}>
-                <Icon name="chart-bar" size={48} color={Colors.neutral[300]} />
-                <Text style={styles.noDataText}>Pas de données pour le graphique sur cette période.</Text>
-              </View>
-            )}
-            <View style={styles.totalAmountContainer}>
-              <Text style={styles.totalAmountLabel}>Total pour la période:</Text>
-              <Text style={[styles.totalAmountValue, { color: getAnalysisColor() }]}>
-                {formatCurrency(totalAmountForPeriod, userCurrency)}
-              </Text>
-            </View>
-          </View>
-
-          {/* Categories Section */}
-          <View style={styles.categoriesSection}>
-            <Text style={styles.sectionHeader}>Répartition par Catégorie</Text>
-
-            {loading ? (
-              <SkeletonList count={4} variant="transaction" />
-            ) : categoriesData.length > 0 ? (
-              <>
-                <View style={styles.detailedCategoriesContainer}>
-                  {categorySummary.map((item, index) => {
-                    const percentage = totalAmountForPeriod !== 0 ? ((Math.abs(item.total) / Math.abs(totalAmountForPeriod)) * 100) : 0;
-                    const isNegativeTotal = item.total < 0 && selectedAnalysisType === 'expense';
-                    const displayAmount = isNegativeTotal ? `-${formatCurrency(Math.abs(item.total), userCurrency)}` : formatCurrency(item.total, userCurrency);
-
-                    return (
-                      <TouchableOpacity key={index} style={styles.categoryItem} onPress={() => handleCategoryPress(item)}>
-                        <View style={[styles.categoryIconContainer, { backgroundColor: item.color || Colors.primary.main }]}>
-                          <Icon name={item.iconName || 'help-circle'} size={24} color={Colors.text.inverse} />
-                        </View>
-                        <View style={styles.categoryDetails}>
-                          <Text style={styles.categoryName}>{item.name}</Text>
-                          <View style={styles.categoryProgressBarContainer}>
-                            <View style={[styles.categoryProgressBar, { width: `${percentage}%`, backgroundColor: item.color || Colors.primary.main }]} />
-                          </View>
-                        </View>
-                        <View style={styles.categoryAmountContainer}>
-                          <Text style={styles.categoryAmount}>{displayAmount}</Text>
-                          <Text style={styles.categoryPercentage}>{percentage.toFixed(0)}%</Text>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                <Text style={styles.cardsSubHeader}>Détail des catégories</Text>
-                <FlatList
-                  data={categoriesData}
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => (
-                    <CategoryCard
-                      category={item}
-                      onPress={handleCategoryPress}
-                    />
-                  )}
-                  scrollEnabled={false}
-                  showsVerticalScrollIndicator={false}
-                />
-              </>
-            ) : (
-              <EmptyState
-                {...EmptyStatePresets.statistics}
-                style={{ paddingVertical: 40 }}
-              />
-            )}
-          </View>
-        </View>
-        <View style={{ height: 50 }} />
       </ScrollView>
     </View>
   );
@@ -397,179 +381,214 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background.secondary,
   },
   header: {
-    backgroundColor: Colors.background.primary,
-    paddingTop: Spacing.xl + Spacing.lg,
+    paddingTop: Platform.OS === 'ios' ? Spacing.xxl + Spacing.md : Spacing.lg,
     paddingBottom: Spacing.lg,
     paddingHorizontal: Spacing.md,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  pageTitle: {
-    ...Typography.h2,
-    color: Colors.text.primary,
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  headerCenter: {
     flex: 1,
+    marginLeft: Spacing.md,
   },
-  typeBadge: {
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    borderRadius: Radius.full,
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: Colors.text.inverse,
+    marginBottom: 2,
   },
-  typeBadgeText: {
-    ...Typography.caption,
-    fontWeight: '600',
+  headerSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
   },
-  scrollViewContent: {
+  headerSpacer: {
+    width: 40,
+  },
+  content: {
     flex: 1,
-  },
-  contentWrapper: {
-    flex: 1,
-    paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,
   },
-  filtersContainer: {
+  analysisTypeContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  analysisTypeChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.background.card,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    ...Shadows.sm,
+  },
+  analysisTypeChipActive: {
+    // Applied dynamically with color
+  },
+  analysisTypeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text.secondary,
+  },
+  overviewCard: {
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.md,
+    backgroundColor: Colors.background.card,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+    ...Shadows.sm,
+  },
+  overviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: Spacing.md,
   },
-  dropdownWrapper: {
+  overviewIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: Radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overviewInfo: {
     flex: 1,
   },
-  dropdownLabel: {
-    ...Typography.bodyBold,
-    color: Colors.text.primary,
-    marginBottom: Spacing.sm,
+  overviewLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: Colors.text.secondary,
+    marginBottom: 4,
   },
-  pickerContainer: {
-    height: 50,
-  },
-  pickerStyle: {
-    backgroundColor: Colors.background.card,
-    borderColor: Colors.border.light,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.md,
-    ...Shadows.sm,
-  },
-  pickerTextStyle: {
-    ...Typography.body,
-    color: Colors.text.primary,
-  },
-  dropdownListContainer: {
-    borderColor: Colors.border.light,
-    borderRadius: Radius.sm,
-    marginTop: Spacing.xs,
-    backgroundColor: Colors.background.card,
-    ...Shadows.sm,
-  },
-  pickerItemSeparator: {
-    height: 1,
-    backgroundColor: Colors.border.light,
+  overviewAmount: {
+    fontSize: 28,
+    fontWeight: '700',
   },
   chartCard: {
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.md,
     backgroundColor: Colors.background.card,
-    borderRadius: Radius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.lg,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
     ...Shadows.sm,
   },
-  chartTitle: {
-    ...Typography.h3,
+  chartHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: Spacing.md,
-    textAlign: 'center',
+  },
+  chartTitle: {
+    fontSize: 16,
+    fontWeight: '700',
     color: Colors.text.primary,
   },
-  chartStyle: {
-    borderRadius: Radius.lg,
+  chartBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: Radius.xs,
+  },
+  chartBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  chart: {
+    marginVertical: Spacing.xs,
+    borderRadius: Radius.sm,
   },
   noDataContainer: {
     alignItems: 'center',
-    paddingVertical: Spacing.xl + Spacing.lg,
+    paddingVertical: Spacing.xl,
   },
-  totalAmountContainer: {
-    marginTop: Spacing.md,
-    padding: Spacing.md,
-    backgroundColor: Colors.background.secondary,
-    borderRadius: Radius.sm,
-    alignItems: 'center',
-  },
-  totalAmountLabel: {
-    ...Typography.caption,
+  noDataText: {
+    fontSize: 14,
     color: Colors.text.secondary,
-    marginBottom: Spacing.xs,
-  },
-  totalAmountValue: {
-    ...Typography.h2,
+    marginTop: Spacing.sm,
   },
   categoriesSection: {
-    marginBottom: Spacing.lg,
-  },
-  sectionHeader: {
-    ...Typography.h3,
+    paddingHorizontal: Spacing.md,
     marginBottom: Spacing.md,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
     color: Colors.text.primary,
-  },
-  cardsSubHeader: {
-    ...Typography.bodyBold,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.sm,
-    color: Colors.text.secondary,
-  },
-  detailedCategoriesContainer: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   categoryItem: {
     flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: Colors.background.card,
-    padding: Spacing.md,
     borderRadius: Radius.md,
+    padding: Spacing.md,
     marginBottom: Spacing.sm,
     ...Shadows.sm,
   },
-  categoryIconContainer: {
+  categoryIcon: {
     width: 44,
     height: 44,
-    borderRadius: Radius.full,
+    borderRadius: Radius.sm,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
   },
-  categoryDetails: {
+  categoryContent: {
     flex: 1,
   },
-  categoryName: {
-    ...Typography.bodyBold,
-    color: Colors.text.primary,
+  categoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  categoryProgressBarContainer: {
-    height: 6,
-    backgroundColor: Colors.neutral[200],
-    borderRadius: Radius.xs,
-    overflow: 'hidden',
-  },
-  categoryProgressBar: {
-    height: '100%',
-    borderRadius: Radius.xs,
-  },
-  categoryAmountContainer: {
-    alignItems: 'flex-end',
+  categoryName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.text.primary,
   },
   categoryAmount: {
-    ...Typography.bodyBold,
+    fontSize: 15,
+    fontWeight: '700',
     color: Colors.text.primary,
-    marginBottom: 2,
+  },
+  categoryFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  progressBarContainer: {
+    flex: 1,
+    height: 6,
+    backgroundColor: Colors.background.secondary,
+    borderRadius: Radius.full,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: Radius.full,
   },
   categoryPercentage: {
-    ...Typography.small,
+    fontSize: 12,
+    fontWeight: '600',
     color: Colors.text.secondary,
+    minWidth: 40,
+    textAlign: 'right',
   },
-  noDataText: {
-    ...Typography.body,
-    textAlign: 'center',
-    marginTop: Spacing.md,
-    color: Colors.text.secondary,
+  bottomSpacer: {
+    height: 120,
   },
 });
 
